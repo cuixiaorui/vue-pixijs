@@ -1,10 +1,10 @@
 import { createRenderer } from "@vue/runtime-core";
-import { getNodeOps } from "./nodeOps";
+import { nodeOps } from "./nodeOps";
 import { patchProp } from "./patchProp";
 
-export const initRuntimeCanvas = (app) => {
+export const initRuntimeCanvas = () => {
   const renderer = createRenderer({
-    ...getNodeOps(app),
+    ...nodeOps,
     patchProp,
   });
 

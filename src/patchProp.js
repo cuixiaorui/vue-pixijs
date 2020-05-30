@@ -1,3 +1,4 @@
+import * as PIXI from "PIXI.js";
 export const patchProp = (
   el,
   key,
@@ -17,11 +18,11 @@ export const patchProp = (
       el.y = nextValue;
       break;
     case "width":
-        el.width = nextValue;
-        break;
+      el.width = nextValue;
+      break;
     case "height":
-        el.height = nextValue;
-        break;
+      el.height = nextValue;
+      break;
     case "on":
       Object.keys(nextValue).forEach((eventName) => {
         const callback = nextValue[eventName];
@@ -29,8 +30,8 @@ export const patchProp = (
       });
       break;
     case "texture":
-        let texture = PIXI.Texture.from(nextValue);
-        el.texture = texture;
-        break;
+      let texture = PIXI.Texture.from(nextValue);
+      el.texture = texture;
+      break;
   }
 };

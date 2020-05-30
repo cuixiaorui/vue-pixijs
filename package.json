@@ -33,6 +33,7 @@
     "webpack-cli": "^3.3.11"
   },
   "dependencies": {
-    "@vue/runtime-core": "^3.0.0-beta.14"
+    "@vue/runtime-core": "^3.0.0-beta.14",
+    "pixi.js": "^5.2.4"
   }
 }

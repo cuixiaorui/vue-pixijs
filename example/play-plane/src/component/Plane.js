@@ -1,5 +1,4 @@
-import { h, ref, defineComponent } from "../../../src/index";
-import Bullet from "./Bullet"
+import { h, ref, defineComponent } from "../../../../src/index";
 // 飞机
 export default defineComponent({
   setup(props, ctx) {
@@ -27,11 +26,10 @@ export default defineComponent({
           break;
 
         case "Space":
-            ctx.emit("attack",{
-                x,
-                y
-            })
-          console.log("发一个炮弹");
+          ctx.emit("attack", {
+            x,
+            y,
+          });
           break;
         default:
           break;

@@ -1,73 +1,9 @@
-import * as PIXI from "PIXI.js";
-import {
-  h,
-  initRuntimeCanvas,
-  ref,
-  defineComponent,
-  reactive,
-  watch,
-} from "../../src/index";
+import { initRuntimeCanvas } from "../../src/index";
+import gameComponent from "./src/component/GameContainer";
+import { game } from "./game";
 
-import Plane from "./src/Plane";
-import Bullet from "./src/Bullet";
+const { renderer } = initRuntimeCanvas();
 
-console.log(Plane);
-
-window.PIXI = PIXI;
-let app = initPixi();
-const { renderer } = initRuntimeCanvas(app);
-const RootComponent = createRootComponent();
-
-const root = renderer.createApp(RootComponent);
-root.mount(app.stage);
-
-function createRootComponent() {
-  return {
-    setup() {
-      // 存储所有的子弹
-      const selfBullets = reactive([]);
-
-      return {
-        selfBullets,
-      };
-    },
-
-    render(ctx) {
-      console.log(
-        h(Bullet, {
-          props: {
-            x: ref(100),
-            y: 200,
-          },
-        })
-      );
-      return h(
-        "Container",
-        {
-          width: 500,
-          height: 500,
-        },
-        [
-          h(Plane, {
-            onAttack(pos) {
-              ctx.selfBullets.push(pos);
-            },
-          }),
-          ...ctx.selfBullets.map((bulletInfo) => {
-            return h(Bullet, {
-              x: bulletInfo.x,
-              y: bulletInfo.y,
-            });
-          }),
-        ]
-      );
-    },
-  };
-}
-
-function initPixi() {
-  let app = new PIXI.Application({ width: 500, height: 500 });
-  app.renderer.backgroundColor = 0x061639;
-  document.body.appendChild(app.view);
-  return app;
-}
+// root component 作为游戏的根容器
+const root = renderer.createApp(gameComponent);
+root.mount(game.stage);
