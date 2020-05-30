@@ -1,5 +1,6 @@
 import Bullet from "./Bullet.js";
 import Plane from "./Plane.js";
+import Map from './Map.js'
 import { h, reactive } from "../../../../src/index.js";
 
 let hashCode = 0;
@@ -46,6 +47,7 @@ export default {
         height: 500,
       },
       [
+        h(Map),
         h(Plane, {
           onAttack: ctx.handlePlaneAttack,
         }),
