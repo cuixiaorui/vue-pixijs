@@ -27,7 +27,7 @@ export default defineComponent({
 
         case "Space":
           ctx.emit("attack", {
-            x,
+            x:x.value + 50,
             y,
           });
           break;
@@ -42,9 +42,10 @@ export default defineComponent({
     };
   },
   render(ctx) {
-    return h("Rectangle", {
+    return h("Sprite", {
       x: ctx.x,
       y: ctx.y,
+      texture: "../../resource/assets/plane.png",
     });
   },
 });
