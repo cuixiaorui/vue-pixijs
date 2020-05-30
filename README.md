@@ -14,5 +14,5 @@
 
 
 ## 进行中
-1. 打飞机游戏
+1. [打飞机游戏](https://github.com/cuixiaorui/vue-pixijs/tree/master/example/play-plane)
 
