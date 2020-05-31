@@ -52673,7 +52673,10 @@ __webpack_require__.r(__webpack_exports__);
 const game = initPixi();
 
 function initPixi() {
-  let app = new PIXI_js__WEBPACK_IMPORTED_MODULE_0__["Application"]({ width: 500, height: 500 });
+  let app = new PIXI_js__WEBPACK_IMPORTED_MODULE_0__["Application"]({
+    width: 750,
+    height: 800,
+  });
   app.renderer.backgroundColor = 0x061639;
   document.body.appendChild(app.view);
   return app;
@@ -99730,35 +99733,19 @@ module.exports = function(module) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony import */ var _game__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../game */ "./game.js");
-/* harmony import */ var _src_index__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../../../src/index */ "../../src/index.js");
-
+/* harmony import */ var _src_index__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../../../src/index */ "../../src/index.js");
 
 
 //炮弹
-/* harmony default export */ __webpack_exports__["default"] = (Object(_src_index__WEBPACK_IMPORTED_MODULE_1__["defineComponent"])({
+/* harmony default export */ __webpack_exports__["default"] = (Object(_src_index__WEBPACK_IMPORTED_MODULE_0__["defineComponent"])({
   props: ["x", "y", "id"],
   setup(props, ctx) {
-    const speed = 5;
-    const id = props.id;
-    const x = Object(_src_index__WEBPACK_IMPORTED_MODULE_1__["ref"])(props.x);
-    const y = Object(_src_index__WEBPACK_IMPORTED_MODULE_1__["ref"])(props.y);
+    const x = Object(_src_index__WEBPACK_IMPORTED_MODULE_0__["ref"])(props.x);
+    const y = Object(_src_index__WEBPACK_IMPORTED_MODULE_0__["ref"])(props.y);
 
-    const handleTicker = () => {
-      y.value -= speed;
-      if (y.value < 100) {
-        ctx.emit("destroy", {
-          id,
-        });
-      }
-    };
-
-    Object(_src_index__WEBPACK_IMPORTED_MODULE_1__["onMounted"])(() => {
-      _game__WEBPACK_IMPORTED_MODULE_0__["game"].ticker.add(handleTicker);
-    });
-
-    Object(_src_index__WEBPACK_IMPORTED_MODULE_1__["onUnmounted"])(() => {
-      _game__WEBPACK_IMPORTED_MODULE_0__["game"].ticker.remove(handleTicker);
+    Object(_src_index__WEBPACK_IMPORTED_MODULE_0__["watch"])(props, (newProps) => {
+      x.value = newProps.x;
+      y.value = newProps.y;
     });
 
     return {
@@ -99767,10 +99754,47 @@ __webpack_require__.r(__webpack_exports__);
     };
   },
   render(ctx) {
-    return Object(_src_index__WEBPACK_IMPORTED_MODULE_1__["h"])("Sprite", {
+    return Object(_src_index__WEBPACK_IMPORTED_MODULE_0__["h"])("Sprite", {
       x: ctx.x,
       y: ctx.y,
       texture: "../../resource/assets/bunny.png",
+    });
+  },
+}));
+
+
+/***/ }),
+
+/***/ "./src/component/EnemyPlane.js":
+/*!*************************************!*\
+  !*** ./src/component/EnemyPlane.js ***!
+  \*************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _game__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../game */ "./game.js");
+/* harmony import */ var _use__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../use */ "./src/use/index.js");
+/* harmony import */ var _src_index__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../../../src/index */ "../../src/index.js");
+
+
+
+// 敌方飞机
+/* harmony default export */ __webpack_exports__["default"] = (Object(_src_index__WEBPACK_IMPORTED_MODULE_2__["defineComponent"])({
+  setup(props, ctx) {
+    const x = Object(_src_index__WEBPACK_IMPORTED_MODULE_2__["ref"])(150);
+    const y = Object(_src_index__WEBPACK_IMPORTED_MODULE_2__["ref"])(0);
+    return {
+      x,
+      y,
+    };
+  },
+  render(ctx) {
+    return Object(_src_index__WEBPACK_IMPORTED_MODULE_2__["h"])("Sprite", {
+      x: ctx.x,
+      y: ctx.y,
+      texture: "../../resource/assets/enemy1.png",
     });
   },
 }));
@@ -99789,7 +99813,13 @@ __webpack_require__.r(__webpack_exports__);
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _Bullet_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./Bullet.js */ "./src/component/Bullet.js");
 /* harmony import */ var _Plane_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./Plane.js */ "./src/component/Plane.js");
-/* harmony import */ var _src_index_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../../../src/index.js */ "../../src/index.js");
+/* harmony import */ var _Map_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./Map.js */ "./src/component/Map.js");
+/* harmony import */ var _EnemyPlane__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./EnemyPlane */ "./src/component/EnemyPlane.js");
+/* harmony import */ var _game__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../../game */ "./game.js");
+/* harmony import */ var _src_index_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../../../../src/index.js */ "../../src/index.js");
+
+
+
 
 
 
@@ -99797,23 +99827,73 @@ __webpack_require__.r(__webpack_exports__);
 let hashCode = 0;
 /* harmony default export */ __webpack_exports__["default"] = ({
   setup() {
-    const selfBullets = Object(_src_index_js__WEBPACK_IMPORTED_MODULE_2__["reactive"])([]);
+    const selfBullets = Object(_src_index_js__WEBPACK_IMPORTED_MODULE_5__["reactive"])([]);
+    const enemyPlanes = Object(_src_index_js__WEBPACK_IMPORTED_MODULE_5__["reactive"])([
+      {
+        x: 150,
+        y: 0,
+        width: 217,
+        height: 263,
+      },
+    ]);
 
     const createHashCode = () => {
       return hashCode++;
-    }
+    };
 
     const handleBulletDestroy = ({ id }) => {
       const index = selfBullets.findIndex((info) => info.id == id);
       selfBullets.splice(index, 1);
     };
 
-    const handlePlaneAttack = ({x,y}) => {
-      const id = createHashCode()
-      selfBullets.push({ x, y, id });
+    const handlePlaneAttack = ({ x, y }) => {
+      const id = createHashCode();
+      const width = 26;
+      const height = 37;
+      selfBullets.push({ x, y, id, width, height });
     };
 
+    // todo
+    // 检测子弹的位置是否和敌军的位置相交
+    // 如果相交的话，就认定为碰撞了
+    // 销毁子弹  销毁碰撞到的敌军
+    // 在销毁之前 可以添加爆炸效果到敌军的位置
+    // 公式
+    function boxesIntersect(ab, bb) {
+      return (
+        ab.x + ab.width > bb.x &&
+        ab.x < bb.x + bb.width &&
+        ab.y + ab.height > bb.y &&
+        ab.y < bb.y + bb.height
+      );
+    }
+
+    const bulletSpeed = 3;
+    const vanishLine = -100;
+    const isDisappear = (val) => val < vanishLine;
+
+    _game__WEBPACK_IMPORTED_MODULE_4__["game"].ticker.add(() => {
+      selfBullets.forEach((bullet, index) => {
+        bullet.y -= bulletSpeed;
+        if (isDisappear(bullet.y)) {
+          selfBullets.splice(index, 1);
+        }
+      });
+
+      // 先遍历所有的子弹
+      selfBullets.forEach((bullet, index) => {
+        enemyPlanes.forEach((enemyPlane) => {
+          const isIntersect = boxesIntersect(bullet, enemyPlane);
+          if (isIntersect) {
+            console.log("碰上啦");
+            selfBullets.splice(index, 1);
+          }
+        });
+      });
+    });
+
     return {
+      enemyPlanes,
       selfBullets,
       handleBulletDestroy,
       handlePlaneAttack,
@@ -99822,30 +99902,109 @@ let hashCode = 0;
 
   render(ctx) {
     const createBullet = (info) => {
-      return Object(_src_index_js__WEBPACK_IMPORTED_MODULE_2__["h"])(_Bullet_js__WEBPACK_IMPORTED_MODULE_0__["default"], {
-        key: info.id,
+      return Object(_src_index_js__WEBPACK_IMPORTED_MODULE_5__["h"])(_Bullet_js__WEBPACK_IMPORTED_MODULE_0__["default"], {
+        key: "Bullet" + info.id,
         x: info.x,
         y: info.y,
         id: info.id,
+        width: info.width,
+        height: info.height,
         onDestroy: ctx.handleBulletDestroy,
       });
     };
 
-    return Object(_src_index_js__WEBPACK_IMPORTED_MODULE_2__["h"])(
+    const createEnemyPlane = (info, index) => {
+      return Object(_src_index_js__WEBPACK_IMPORTED_MODULE_5__["h"])(_EnemyPlane__WEBPACK_IMPORTED_MODULE_3__["default"], {
+        key: "EnemyPlane" + index,
+        x: info.x,
+        y: info.y,
+        height: info.height,
+        width: info.width,
+      });
+    };
+
+    return Object(_src_index_js__WEBPACK_IMPORTED_MODULE_5__["h"])(
       "Container",
       {
         width: 500,
         height: 500,
       },
       [
-        Object(_src_index_js__WEBPACK_IMPORTED_MODULE_2__["h"])(_Plane_js__WEBPACK_IMPORTED_MODULE_1__["default"], {
+        Object(_src_index_js__WEBPACK_IMPORTED_MODULE_5__["h"])(_Map_js__WEBPACK_IMPORTED_MODULE_2__["default"]),
+        Object(_src_index_js__WEBPACK_IMPORTED_MODULE_5__["h"])(_Plane_js__WEBPACK_IMPORTED_MODULE_1__["default"], {
           onAttack: ctx.handlePlaneAttack,
         }),
         ...ctx.selfBullets.map(createBullet),
+        ...ctx.enemyPlanes.map(createEnemyPlane),
       ]
     );
   },
 });
+
+
+/***/ }),
+
+/***/ "./src/component/Map.js":
+/*!******************************!*\
+  !*** ./src/component/Map.js ***!
+  \******************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _game__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../game */ "./game.js");
+/* harmony import */ var _src_index__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../../../src/index */ "../../src/index.js");
+
+
+
+// 地图
+/* harmony default export */ __webpack_exports__["default"] = (Object(_src_index__WEBPACK_IMPORTED_MODULE_1__["defineComponent"])({
+  setup(props, ctx) {
+    const mapHeight = 800;
+    let x1 = Object(_src_index__WEBPACK_IMPORTED_MODULE_1__["ref"])(0);
+    let x2 = Object(_src_index__WEBPACK_IMPORTED_MODULE_1__["ref"])(0);
+    let y1 = Object(_src_index__WEBPACK_IMPORTED_MODULE_1__["ref"])(0);
+    let y2 = Object(_src_index__WEBPACK_IMPORTED_MODULE_1__["ref"])(-mapHeight);
+
+    const speed = 1;
+
+    _game__WEBPACK_IMPORTED_MODULE_0__["game"].ticker.add(() => {
+      y1.value += speed;
+      y2.value += speed;
+
+      if (y1.value > mapHeight) {
+        y1.value = y2.value - mapHeight;
+      }
+
+      if (y2.value > mapHeight) {
+        y2.value = y1.value - mapHeight;
+      }
+    });
+    return {
+      y1,
+      x1,
+      y2,
+      x2,
+    };
+  },
+  render(ctx) {
+    return Object(_src_index__WEBPACK_IMPORTED_MODULE_1__["h"])("Container", [
+      Object(_src_index__WEBPACK_IMPORTED_MODULE_1__["h"])("Sprite", {
+        x: ctx.x1,
+        y: ctx.y1,
+        texture: "../../resource/assets/map.png",
+        key: "1",
+      }),
+      Object(_src_index__WEBPACK_IMPORTED_MODULE_1__["h"])("Sprite", {
+        x: ctx.x2,
+        y: ctx.y2,
+        texture: "../../resource/assets/map.png",
+        key: "2",
+      }),
+    ]);
+  },
+}));
 
 
 /***/ }),
@@ -99859,44 +100018,22 @@ let hashCode = 0;
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony import */ var _src_index__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../../../src/index */ "../../src/index.js");
+/* harmony import */ var _game__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../game */ "./game.js");
+/* harmony import */ var _use__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../use */ "./src/use/index.js");
+/* harmony import */ var _src_index__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../../../src/index */ "../../src/index.js");
+
+
 
 // 飞机
-/* harmony default export */ __webpack_exports__["default"] = (Object(_src_index__WEBPACK_IMPORTED_MODULE_0__["defineComponent"])({
+/* harmony default export */ __webpack_exports__["default"] = (Object(_src_index__WEBPACK_IMPORTED_MODULE_2__["defineComponent"])({
   setup(props, ctx) {
-    // 初始位置
-    // 舞台高度为 500
-    const x = Object(_src_index__WEBPACK_IMPORTED_MODULE_0__["ref"])(200);
-    const y = Object(_src_index__WEBPACK_IMPORTED_MODULE_0__["ref"])(400);
-
-    const speed = 20;
-    window.addEventListener("keydown", (e) => {
-      switch (e.code) {
-        case "ArrowDown":
-          y.value += speed;
-          break;
-        case "ArrowUp":
-          y.value -= speed;
-          break;
-
-        case "ArrowLeft":
-          x.value -= speed;
-          break;
-
-        case "ArrowRight":
-          x.value += speed;
-          break;
-
-        case "Space":
-          ctx.emit("attack", {
-            x,
-            y,
-          });
-          break;
-        default:
-          break;
-      }
+    const { x, y } = Object(_use__WEBPACK_IMPORTED_MODULE_1__["useKeyboardMove"])({
+      x: 200,
+      y: 400,
+      speed: 7,
     });
+
+    attackHandler(ctx, x, y);
 
     return {
       x,
@@ -99904,12 +100041,244 @@ __webpack_require__.r(__webpack_exports__);
     };
   },
   render(ctx) {
-    return Object(_src_index__WEBPACK_IMPORTED_MODULE_0__["h"])("Rectangle", {
+    return Object(_src_index__WEBPACK_IMPORTED_MODULE_2__["h"])("Sprite", {
       x: ctx.x,
       y: ctx.y,
+      texture: "../../resource/assets/plane.png",
     });
   },
 }));
+
+function attackHandler(ctx, x, y) {
+  let isAttack = false;
+  // 攻击间隔时间
+  const ATTACK_INTERVAL = 10;
+
+  let startTime = 0;
+  _game__WEBPACK_IMPORTED_MODULE_0__["game"].ticker.add(() => {
+    if (isAttack) {
+      startTime++;
+      if (startTime > ATTACK_INTERVAL) {
+        emitAttack();
+        startTime = 0;
+      }
+    }
+  });
+
+  const emitAttack = () => {
+    ctx.emit("attack", {
+      x: x.value + 50,
+      y: y.value,
+    });
+  };
+
+  const startAttack = () => {
+    isAttack = true;
+    startTime = 100;
+  };
+
+  const stopAttack = () => {
+    isAttack = false;
+  };
+
+  Object(_use__WEBPACK_IMPORTED_MODULE_1__["useKeyboard"])({
+    Space: {
+      keydown: startAttack,
+      keyup: stopAttack,
+    },
+  });
+}
+
+
+/***/ }),
+
+/***/ "./src/use/index.js":
+/*!**************************!*\
+  !*** ./src/use/index.js ***!
+  \**************************/
+/*! exports provided: useKeyboardMove, useKeyboard */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _useKeyboardMove__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./useKeyboardMove */ "./src/use/useKeyboardMove.js");
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "useKeyboardMove", function() { return _useKeyboardMove__WEBPACK_IMPORTED_MODULE_0__["useKeyboardMove"]; });
+
+/* harmony import */ var _useKeyboard__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./useKeyboard */ "./src/use/useKeyboard.js");
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "useKeyboard", function() { return _useKeyboard__WEBPACK_IMPORTED_MODULE_1__["useKeyboard"]; });
+
+
+
+
+
+/***/ }),
+
+/***/ "./src/use/useKeyboard.js":
+/*!********************************!*\
+  !*** ./src/use/useKeyboard.js ***!
+  \********************************/
+/*! exports provided: useKeyboard */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "useKeyboard", function() { return useKeyboard; });
+/* harmony import */ var _src_index__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../../../src/index */ "../../src/index.js");
+
+/**
+ * 注册键盘事件
+ */
+const useKeyboard = (map) => {
+  const handleKeydown = (e) => {
+    const callbackObj = map[e.code];
+    if (callbackObj && callbackObj.keydown) callbackObj.keydown(e);
+  };
+
+  const handleKeyup = (e) => {
+    const callbackObj = map[e.code];
+    if (callbackObj && callbackObj.keyup) callbackObj.keyup(e);
+  };
+
+  Object(_src_index__WEBPACK_IMPORTED_MODULE_0__["onMounted"])(() => {
+    window.addEventListener("keydown", handleKeydown);
+    window.addEventListener("keyup", handleKeyup);
+  });
+
+  Object(_src_index__WEBPACK_IMPORTED_MODULE_0__["onUnmounted"])(() => {
+    window.removeEventListener("keydown", handleKeydown);
+    window.removeEventListener("keyup", handleKeyup);
+  });
+};
+
+
+/***/ }),
+
+/***/ "./src/use/useKeyboardMove.js":
+/*!************************************!*\
+  !*** ./src/use/useKeyboardMove.js ***!
+  \************************************/
+/*! exports provided: useKeyboardMove */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "useKeyboardMove", function() { return useKeyboardMove; });
+/* harmony import */ var _game__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../game */ "./game.js");
+/* harmony import */ var _src_index__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../../../src/index */ "../../src/index.js");
+
+
+
+/**
+ * 键盘移动
+ * @param x 初始化 x 坐标值
+ * @param y 初始化 y 坐标值
+ * @param speed 移动速度
+ */
+
+const commandType = {
+  upAndDown: "upAndDown",
+  leftAndRight: "leftAndRight",
+};
+
+const useKeyboardMove = ({ x, y, speed }) => {
+  const moveX = Object(_src_index__WEBPACK_IMPORTED_MODULE_1__["ref"])(x);
+  const moveY = Object(_src_index__WEBPACK_IMPORTED_MODULE_1__["ref"])(y);
+
+  const moveCommands = [];
+
+  const downCommand = {
+    type: commandType.upAndDown,
+    dir: 1,
+    id: 1,
+  };
+
+  const upCommand = {
+    type: commandType.upAndDown,
+    dir: -1,
+    id: 2,
+  };
+
+  const leftCommand = {
+    type: commandType.leftAndRight,
+    dir: -1,
+    id: 3,
+  };
+
+  const rightCommand = {
+    type: commandType.leftAndRight,
+    dir: 1,
+    id: 4,
+  };
+
+  const findUpAndDownCommand = () =>
+    moveCommands.find((command) => command.type === commandType.upAndDown);
+
+  const findLeftAndRightCommand = () =>
+    moveCommands.find((command) => command.type === commandType.leftAndRight);
+
+  const isExistCommand = (command) => {
+    const id = command.id;
+    const result = moveCommands.find((c) => c.id === id);
+    if (result) return true;
+    return false;
+  };
+
+  const removeCommand = (command) => {
+    const id = command.id;
+    const index = moveCommands.findIndex((c) => c.id === id);
+    moveCommands.splice(index, 1);
+  };
+
+  const handleTicker = () => {
+    const upAndDownCommand = findUpAndDownCommand();
+    if (upAndDownCommand) {
+      moveY.value += speed * upAndDownCommand.dir;
+    }
+
+    const leftAndRightCommand = findLeftAndRightCommand();
+    if (leftAndRightCommand) {
+      moveX.value += speed * leftAndRightCommand.dir;
+    }
+  };
+
+  const commandMap = {
+    ArrowLeft: leftCommand,
+    ArrowRight: rightCommand,
+    ArrowUp: upCommand,
+    ArrowDown: downCommand,
+  };
+
+  const handleKeydown = (e) => {
+    const command = commandMap[e.code];
+    if (command && !isExistCommand(command)) {
+      moveCommands.unshift(command);
+    }
+  };
+
+  const handleKeyup = (e) => {
+    const command = commandMap[e.code];
+    if (command) {
+      removeCommand(command);
+    }
+  };
+
+  Object(_src_index__WEBPACK_IMPORTED_MODULE_1__["onMounted"])(() => {
+    _game__WEBPACK_IMPORTED_MODULE_0__["game"].ticker.add(handleTicker);
+    window.addEventListener("keydown", handleKeydown);
+    window.addEventListener("keyup", handleKeyup);
+  });
+
+  Object(_src_index__WEBPACK_IMPORTED_MODULE_1__["onUnmounted"])(() => {
+    _game__WEBPACK_IMPORTED_MODULE_0__["game"].ticker.remove(handleTicker);
+    window.removeEventListener("keydown", handleKeydown);
+    window.removeEventListener("keyup", handleKeyup);
+  });
+
+  return {
+    x: moveX,
+    y: moveY,
+  };
+};
 
 
 /***/ })
