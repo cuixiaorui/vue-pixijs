@@ -1,39 +1,23 @@
-import { h, ref, defineComponent } from "../../../../src/index";
+import { useKeyboardMove, useKeyboard } from "../use";
+import { h, defineComponent } from "../../../../src/index";
 // 飞机
 export default defineComponent({
   setup(props, ctx) {
-    // 初始位置
-    // 舞台高度为 500
-    const x = ref(200);
-    const y = ref(400);
+    const emitAttack = () => {
+      ctx.emit("attack", {
+        x: x.value + 50,
+        y,
+      });
+    };
 
-    const speed = 20;
-    window.addEventListener("keydown", (e) => {
-      switch (e.code) {
-        case "ArrowDown":
-          y.value += speed;
-          break;
-        case "ArrowUp":
-          y.value -= speed;
-          break;
+    useKeyboard({
+      Space: emitAttack,
+    });
 
-        case "ArrowLeft":
-          x.value -= speed;
-          break;
-
-        case "ArrowRight":
-          x.value += speed;
-          break;
-
-        case "Space":
-          ctx.emit("attack", {
-            x:x.value + 50,
-            y,
-          });
-          break;
-        default:
-          break;
-      }
+    const { x, y } = useKeyboardMove({
+      x: 200,
+      y: 400,
+      speed: 7,
     });
 
     return {
