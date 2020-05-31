@@ -16,9 +16,12 @@ export default defineComponent({
     const x = ref(props.x);
     const y = ref(props.y);
 
+    const vanishLine = -100;
+    const isDisappear = (val) => val < vanishLine;
+
     const handleTicker = () => {
       y.value -= speed;
-      if (y.value < 100) {
+      if (isDisappear(y.value)) {
         ctx.emit("destroy", {
           id,
         });
