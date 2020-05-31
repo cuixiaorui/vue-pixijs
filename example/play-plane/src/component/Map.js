@@ -10,23 +10,24 @@ import {
 // 地图
 export default defineComponent({
   setup(props, ctx) {
-    let x1 = ref(100);
-    let x2 = ref(100);
-    let y1 = ref(50);
-    let y2 = ref(100);
+    const mapHeight = 800;
+    let x1 = ref(0);
+    let x2 = ref(0);
+    let y1 = ref(0);
+    let y2 = ref(-mapHeight);
 
     const speed = 1;
 
     game.ticker.add(() => {
-      y1.value++;
-      y2.value++;
+      y1.value += speed;
+      y2.value += speed;
 
-      if(y1.value > 400){
-          y1.value = 50;
+      if (y1.value > mapHeight) {
+        y1.value = y2.value - mapHeight;
       }
 
-      if(y2.value > 400){
-          y2.value = 50;
+      if (y2.value > mapHeight) {
+        y2.value = y1.value - mapHeight;
       }
     });
     return {
@@ -37,26 +38,19 @@ export default defineComponent({
     };
   },
   render(ctx) {
-    return h(
-      "Container",
-      {
-        width: 500,
-        height: 500,
-      },
-      [
-        h("Sprite", {
-          x: ctx.x1,
-          y: ctx.y1,
-          texture: "../../resource/assets/bunny.png",
-          key:"1"
-        }),
-        h("Sprite", {
-          x: ctx.x2,
-          y: ctx.y2,
-          texture: "../../resource/assets/bunny.png",
-          key:"2"
-        }),
-      ]
-    );
+    return h("Container", [
+      h("Sprite", {
+        x: ctx.x1,
+        y: ctx.y1,
+        texture: "../../resource/assets/map.png",
+        key: "1",
+      }),
+      h("Sprite", {
+        x: ctx.x2,
+        y: ctx.y2,
+        texture: "../../resource/assets/map.png",
+        key: "2",
+      }),
+    ]);
   },
 });
