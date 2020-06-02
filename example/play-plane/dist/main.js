@@ -99782,9 +99782,32 @@ __webpack_require__.r(__webpack_exports__);
 
 // 敌方飞机
 /* harmony default export */ __webpack_exports__["default"] = (Object(_src_index__WEBPACK_IMPORTED_MODULE_2__["defineComponent"])({
+  props: ["x", "y"],
   setup(props, ctx) {
-    const x = Object(_src_index__WEBPACK_IMPORTED_MODULE_2__["ref"])(150);
-    const y = Object(_src_index__WEBPACK_IMPORTED_MODULE_2__["ref"])(0);
+    const x = Object(_src_index__WEBPACK_IMPORTED_MODULE_2__["ref"])(props.x);
+    const y = Object(_src_index__WEBPACK_IMPORTED_MODULE_2__["ref"])(props.y);
+
+    Object(_src_index__WEBPACK_IMPORTED_MODULE_2__["watch"])(props, (newValue) => {
+      x.value = newValue.x;
+      y.value = newValue.y;
+    });
+
+    // 发射子弹
+    const attackInterval = 2000;
+    let intervalId;
+    Object(_src_index__WEBPACK_IMPORTED_MODULE_2__["onMounted"])(() => {
+      intervalId = setInterval(() => {
+        ctx.emit("attack", {
+          x: x.value + 105,
+          y: y.value + 200,
+        });
+      }, attackInterval);
+    });
+
+    Object(_src_index__WEBPACK_IMPORTED_MODULE_2__["onUnmounted"])(() => {
+      clearInterval(intervalId);
+    });
+
     return {
       x,
       y,
@@ -99816,7 +99839,15 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _Map_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./Map.js */ "./src/component/Map.js");
 /* harmony import */ var _EnemyPlane__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./EnemyPlane */ "./src/component/EnemyPlane.js");
 /* harmony import */ var _game__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../../game */ "./game.js");
-/* harmony import */ var _src_index_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../../../../src/index.js */ "../../src/index.js");
+/* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../utils */ "./src/utils/index.js");
+/* harmony import */ var _src_index_js__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../../../../src/index.js */ "../../src/index.js");
+/* harmony import */ var _moveBullets__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../moveBullets */ "./src/moveBullets.js");
+/* harmony import */ var _moveEnemyPlane__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ../moveEnemyPlane */ "./src/moveEnemyPlane.js");
+/* harmony import */ var _config_index_js__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ../config/index.js */ "./src/config/index.js");
+
+
+
+
 
 
 
@@ -99825,68 +99856,84 @@ __webpack_require__.r(__webpack_exports__);
 
 
 let hashCode = 0;
+const createHashCode = () => {
+  return hashCode++;
+};
+
 /* harmony default export */ __webpack_exports__["default"] = ({
   setup() {
-    const selfBullets = Object(_src_index_js__WEBPACK_IMPORTED_MODULE_5__["reactive"])([]);
-    const enemyPlanes = Object(_src_index_js__WEBPACK_IMPORTED_MODULE_5__["reactive"])([
-      {
-        x: 150,
-        y: 0,
+    //生产敌机
+    const createEnemyPlaneData = (x) => {
+      return {
+        x,
+        y: -200,
         width: 217,
         height: 263,
-      },
-    ]);
-
-    const createHashCode = () => {
-      return hashCode++;
+        life: 3,
+      };
     };
+    const selfBullets = Object(_src_index_js__WEBPACK_IMPORTED_MODULE_6__["reactive"])([]);
+    const enemyPlanes = Object(_src_index_js__WEBPACK_IMPORTED_MODULE_6__["reactive"])([]);
+    const enemyPlaneBullets = Object(_src_index_js__WEBPACK_IMPORTED_MODULE_6__["reactive"])([]);
+
+    setInterval(() => {
+      const x = Math.floor((1 + _config_index_js__WEBPACK_IMPORTED_MODULE_9__["stage"].width) * Math.random());
+      enemyPlanes.push(createEnemyPlaneData(x));
+    }, 1000);
 
     const handleBulletDestroy = ({ id }) => {
       const index = selfBullets.findIndex((info) => info.id == id);
-      selfBullets.splice(index, 1);
+      if (index !== -1) {
+        selfBullets.splice(index, 1);
+      }
     };
 
     const handlePlaneAttack = ({ x, y }) => {
       const id = createHashCode();
       const width = 26;
       const height = 37;
-      selfBullets.push({ x, y, id, width, height });
+      const dir = -1;
+      selfBullets.push({ x, y, id, width, height, dir });
     };
 
-    // todo
-    // 检测子弹的位置是否和敌军的位置相交
-    // 如果相交的话，就认定为碰撞了
-    // 销毁子弹  销毁碰撞到的敌军
-    // 在销毁之前 可以添加爆炸效果到敌军的位置
-    // 公式
-    function boxesIntersect(ab, bb) {
-      return (
-        ab.x + ab.width > bb.x &&
-        ab.x < bb.x + bb.width &&
-        ab.y + ab.height > bb.y &&
-        ab.y < bb.y + bb.height
-      );
-    }
-
-    const bulletSpeed = 3;
-    const vanishLine = -100;
-    const isDisappear = (val) => val < vanishLine;
+    const handleEnemyPlaneAttack = ({ x, y }) => {
+      const id = createHashCode();
+      const width = 26;
+      const height = 37;
+      const dir = 1;
+      enemyPlaneBullets.push({ x, y, id, width, height, dir });
+    };
 
     _game__WEBPACK_IMPORTED_MODULE_4__["game"].ticker.add(() => {
-      selfBullets.forEach((bullet, index) => {
-        bullet.y -= bulletSpeed;
-        if (isDisappear(bullet.y)) {
-          selfBullets.splice(index, 1);
-        }
-      });
+      Object(_moveBullets__WEBPACK_IMPORTED_MODULE_7__["moveBullets"])(selfBullets);
+      Object(_moveBullets__WEBPACK_IMPORTED_MODULE_7__["moveBullets"])(enemyPlaneBullets);
+      Object(_moveEnemyPlane__WEBPACK_IMPORTED_MODULE_8__["moveEnemyPlane"])(enemyPlanes);
 
       // 先遍历所有的子弹
-      selfBullets.forEach((bullet, index) => {
-        enemyPlanes.forEach((enemyPlane) => {
-          const isIntersect = boxesIntersect(bullet, enemyPlane);
+      selfBullets.forEach((bullet, selfIndex) => {
+        // 检测我方子弹是否碰到了敌机
+        enemyPlanes.forEach((enemyPlane, enemyPlaneIndex) => {
+          const isIntersect = Object(_utils__WEBPACK_IMPORTED_MODULE_5__["hitTestRectangle"])(bullet, enemyPlane);
           if (isIntersect) {
-            console.log("碰上啦");
-            selfBullets.splice(index, 1);
+            selfBullets.splice(selfIndex, 1);
+
+            // 敌机需要减血
+            enemyPlane.life--;
+            if (enemyPlane.life <= 0) {
+              // todo
+              // 可以让实例发消息过来在销毁
+              // 因为需要在销毁之前播放销毁动画
+              enemyPlanes.splice(enemyPlaneIndex, 1);
+            }
+          }
+        });
+
+        // 检测是否碰到了敌方子弹
+        enemyPlaneBullets.forEach((enemyBullet, enemyBulletIndex) => {
+          const isIntersect = Object(_utils__WEBPACK_IMPORTED_MODULE_5__["hitTestRectangle"])(bullet, enemyBullet);
+          if (isIntersect) {
+            selfBullets.splice(selfIndex, 1);
+            enemyPlaneBullets.splice(enemyBulletIndex, 1);
           }
         });
       });
@@ -99895,14 +99942,16 @@ let hashCode = 0;
     return {
       enemyPlanes,
       selfBullets,
+      enemyPlaneBullets,
       handleBulletDestroy,
       handlePlaneAttack,
+      handleEnemyPlaneAttack,
     };
   },
 
   render(ctx) {
-    const createBullet = (info) => {
-      return Object(_src_index_js__WEBPACK_IMPORTED_MODULE_5__["h"])(_Bullet_js__WEBPACK_IMPORTED_MODULE_0__["default"], {
+    const createBullet = (info, index) => {
+      return Object(_src_index_js__WEBPACK_IMPORTED_MODULE_6__["h"])(_Bullet_js__WEBPACK_IMPORTED_MODULE_0__["default"], {
         key: "Bullet" + info.id,
         x: info.x,
         y: info.y,
@@ -99914,30 +99963,25 @@ let hashCode = 0;
     };
 
     const createEnemyPlane = (info, index) => {
-      return Object(_src_index_js__WEBPACK_IMPORTED_MODULE_5__["h"])(_EnemyPlane__WEBPACK_IMPORTED_MODULE_3__["default"], {
+      return Object(_src_index_js__WEBPACK_IMPORTED_MODULE_6__["h"])(_EnemyPlane__WEBPACK_IMPORTED_MODULE_3__["default"], {
         key: "EnemyPlane" + index,
         x: info.x,
         y: info.y,
         height: info.height,
         width: info.width,
+        onAttack: ctx.handleEnemyPlaneAttack,
       });
     };
 
-    return Object(_src_index_js__WEBPACK_IMPORTED_MODULE_5__["h"])(
-      "Container",
-      {
-        width: 500,
-        height: 500,
-      },
-      [
-        Object(_src_index_js__WEBPACK_IMPORTED_MODULE_5__["h"])(_Map_js__WEBPACK_IMPORTED_MODULE_2__["default"]),
-        Object(_src_index_js__WEBPACK_IMPORTED_MODULE_5__["h"])(_Plane_js__WEBPACK_IMPORTED_MODULE_1__["default"], {
-          onAttack: ctx.handlePlaneAttack,
-        }),
-        ...ctx.selfBullets.map(createBullet),
-        ...ctx.enemyPlanes.map(createEnemyPlane),
-      ]
-    );
+    return Object(_src_index_js__WEBPACK_IMPORTED_MODULE_6__["h"])("Container", [
+      Object(_src_index_js__WEBPACK_IMPORTED_MODULE_6__["h"])(_Map_js__WEBPACK_IMPORTED_MODULE_2__["default"]),
+      Object(_src_index_js__WEBPACK_IMPORTED_MODULE_6__["h"])(_Plane_js__WEBPACK_IMPORTED_MODULE_1__["default"], {
+        onAttack: ctx.handlePlaneAttack,
+      }),
+      ...ctx.selfBullets.map(createBullet),
+      ...ctx.enemyPlaneBullets.map(createBullet),
+      ...ctx.enemyPlanes.map(createEnemyPlane),
+    ]);
   },
 });
 
@@ -100087,6 +100131,117 @@ function attackHandler(ctx, x, y) {
       keyup: stopAttack,
     },
   });
+}
+
+
+/***/ }),
+
+/***/ "./src/config/index.js":
+/*!*****************************!*\
+  !*** ./src/config/index.js ***!
+  \*****************************/
+/*! exports provided: stage */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "stage", function() { return stage; });
+const stage = {
+  width: 750,
+  height: 800,
+};
+
+
+/***/ }),
+
+/***/ "./src/moveBullets.js":
+/*!****************************!*\
+  !*** ./src/moveBullets.js ***!
+  \****************************/
+/*! exports provided: moveBullets */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "moveBullets", function() { return moveBullets; });
+/* harmony import */ var _config__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./config */ "./src/config/index.js");
+
+const bulletSpeed = 3;
+const topLine = -100;
+const bottomLine = _config__WEBPACK_IMPORTED_MODULE_0__["stage"].height + 50;
+
+const isOverBorder = (val) => {
+  if (val > bottomLine) {
+    return true;
+  }
+
+  if (val < topLine) {
+    return true;
+  }
+
+  return false;
+};
+
+const moveBullets = (bullets) => {
+  bullets.forEach((bullet, index) => {
+    const dir = bullet.dir;
+    bullet.y += bulletSpeed * dir;
+    if (isOverBorder(bullet.y)) {
+      bullets.splice(index, 1);
+    }
+  });
+};
+
+
+/***/ }),
+
+/***/ "./src/moveEnemyPlane.js":
+/*!*******************************!*\
+  !*** ./src/moveEnemyPlane.js ***!
+  \*******************************/
+/*! exports provided: moveEnemyPlane */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "moveEnemyPlane", function() { return moveEnemyPlane; });
+/* harmony import */ var _config__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./config */ "./src/config/index.js");
+
+
+const moveEnemyPlane = (enemyPlanes) => {
+  enemyPlanes.forEach((enemyPlane, index) => {
+    if (!enemyPlane.moveInfo) {
+      enemyPlane.moveInfo = {};
+      enemyPlane.moveInfo.dir = 1;
+      enemyPlane.moveInfo.count = 0;
+    }
+
+    enemyPlane.y++;
+    enemyPlane.x += 1 * enemyPlane.moveInfo.dir;
+    enemyPlane.moveInfo.count++;
+    if (enemyPlane.moveInfo.count > 120) {
+      const factor = Math.random() > 0.5 ? 1 : -1;
+      // 随机转换方向
+      enemyPlane.moveInfo.dir = enemyPlane.moveInfo.dir * factor;
+      enemyPlane.moveInfo.count = 0;
+    }
+
+    // 检测是否到边界了
+    if (isArrivedRightBorder(enemyPlane)) {
+      enemyPlane.x = _config__WEBPACK_IMPORTED_MODULE_0__["stage"].width - enemyPlane.width;
+    }
+    if (isArrivedLeftBorder(enemyPlane)) {
+      enemyPlane.x = 0;
+    }
+  });
+};
+
+function isArrivedLeftBorder(enemyPlane) {
+  return enemyPlane.x <= 0;
+}
+
+function isArrivedRightBorder(enemyPlane) {
+  return enemyPlane.x + enemyPlane.width >= _config__WEBPACK_IMPORTED_MODULE_0__["stage"].width;
 }
 
 
@@ -100279,6 +100434,45 @@ const useKeyboardMove = ({ x, y, speed }) => {
     y: moveY,
   };
 };
+
+
+/***/ }),
+
+/***/ "./src/utils/hitTestRectangle.js":
+/*!***************************************!*\
+  !*** ./src/utils/hitTestRectangle.js ***!
+  \***************************************/
+/*! exports provided: hitTestRectangle */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "hitTestRectangle", function() { return hitTestRectangle; });
+const hitTestRectangle = (objectA, objectB) => {
+  return (
+    objectA.x + objectA.width > objectB.x &&
+    objectA.x < objectB.x + objectB.width &&
+    objectA.y + objectA.height > objectB.y &&
+    objectA.y < objectB.y + objectB.height
+  );
+};
+
+
+/***/ }),
+
+/***/ "./src/utils/index.js":
+/*!****************************!*\
+  !*** ./src/utils/index.js ***!
+  \****************************/
+/*! exports provided: hitTestRectangle */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _hitTestRectangle__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./hitTestRectangle */ "./src/utils/hitTestRectangle.js");
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "hitTestRectangle", function() { return _hitTestRectangle__WEBPACK_IMPORTED_MODULE_0__["hitTestRectangle"]; });
+
+
 
 
 /***/ })
