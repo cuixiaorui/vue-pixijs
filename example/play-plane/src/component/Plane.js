@@ -1,11 +1,17 @@
 import { game } from "../../game";
 import { useKeyboardMove, useKeyboard } from "../use";
-import { h, defineComponent, watch,ref } from "../../../../src/index";
+import {
+  h,
+  defineComponent,
+  watch,
+  ref,
+  onMounted,
+  onUnmounted,
+} from "../../../../src/index";
 // 飞机
 export default defineComponent({
   props: ["x", "y", "speed"],
   setup(props, ctx) {
-
     const x = ref(props.x);
     const y = ref(props.y);
     watch(props, (newProps) => {
@@ -13,7 +19,7 @@ export default defineComponent({
       y.value = newProps.y;
     });
 
-    attackHandler(ctx, x, y);
+    useAttackHandler(ctx, x, y);
 
     return {
       x,
@@ -29,13 +35,14 @@ export default defineComponent({
   },
 });
 
-function attackHandler(ctx, x, y) {
+function useAttackHandler(ctx, x, y) {
   let isAttack = false;
   // 攻击间隔时间
   const ATTACK_INTERVAL = 10;
 
   let startTime = 0;
-  game.ticker.add(() => {
+
+  const handleTicker = () => {
     if (isAttack) {
       startTime++;
       if (startTime > ATTACK_INTERVAL) {
@@ -43,6 +50,14 @@ function attackHandler(ctx, x, y) {
         startTime = 0;
       }
     }
+  };
+
+  onMounted(() => {
+    game.ticker.add(handleTicker);
+  });
+
+  onUnmounted(() => {
+    game.ticker.remove(handleTicker);
   });
 
   const emitAttack = () => {
