@@ -8,9 +8,6 @@ import { hitTestRectangle } from "../../utils";
 import {
   h,
   reactive,
-  ref,
-  watch,
-  computed,
   defineComponent,
   onMounted,
   onUnmounted,
@@ -26,6 +23,7 @@ const createHashCode = () => {
   return hashCode++;
 };
 
+// 我方战机
 const useSelfPlane = ({ x, y, speed }) => {
   const selfPlane = reactive({
     x,
@@ -71,6 +69,7 @@ const useSelfPlane = ({ x, y, speed }) => {
   return selfPlane;
 };
 
+// 敌机
 const useEnemyPlanes = () => {
   //生产敌机
   const createEnemyPlaneData = (x) => {
@@ -91,6 +90,79 @@ const useEnemyPlanes = () => {
   }, 1000);
 
   return enemyPlanes;
+};
+
+// 战斗逻辑
+const useFighting = ({
+  selfPlane,
+  selfBullets,
+  enemyPlanes,
+  enemyPlaneBullets,
+  gameOverCallback,
+}) => {
+  const handleTicker = () => {
+    moveBullets(selfBullets);
+    moveBullets(enemyPlaneBullets);
+    moveEnemyPlane(enemyPlanes);
+
+    // 先遍历自己所有的子弹
+    selfBullets.forEach((bullet, selfIndex) => {
+      // 检测我方子弹是否碰到了敌机
+      enemyPlanes.forEach((enemyPlane, enemyPlaneIndex) => {
+        const isIntersect = hitTestRectangle(bullet, enemyPlane);
+        if (isIntersect) {
+          selfBullets.splice(selfIndex, 1);
+
+          // 敌机需要减血
+          enemyPlane.life--;
+          if (enemyPlane.life <= 0) {
+            // todo
+            // 可以让实例发消息过来在销毁
+            // 因为需要在销毁之前播放销毁动画
+            enemyPlanes.splice(enemyPlaneIndex, 1);
+          }
+        }
+      });
+
+      // 检测是否碰到了敌方子弹
+      enemyPlaneBullets.forEach((enemyBullet, enemyBulletIndex) => {
+        const isIntersect = hitTestRectangle(bullet, enemyBullet);
+        if (isIntersect) {
+          selfBullets.splice(selfIndex, 1);
+          enemyPlaneBullets.splice(enemyBulletIndex, 1);
+        }
+      });
+    });
+
+    const hitSelfHandle = (enemyObject) => {
+      const isIntersect = hitTestRectangle(selfPlane, enemyObject);
+      if (isIntersect) {
+        // 碰到我方飞机
+        // 直接 game over
+        // 跳转到结束页面
+        gameOverCallback && gameOverCallback();
+      }
+    };
+
+    // 遍历敌军的子弹
+    enemyPlaneBullets.forEach((enemyBullet, enemyBulletIndex) => {
+      hitSelfHandle(enemyBullet);
+    });
+
+    // 遍历敌军
+    // 我方和敌军碰撞也会结束游戏
+    enemyPlanes.forEach((enemyPlane) => {
+      hitSelfHandle(enemyPlane);
+    });
+  };
+
+  onUnmounted(() => {
+    game.ticker.remove(handleTicker);
+  });
+
+  onMounted(() => {
+    game.ticker.add(handleTicker);
+  });
 };
 
 export default defineComponent({
@@ -128,70 +200,16 @@ export default defineComponent({
       enemyPlaneBullets.push({ x, y, id, width, height, dir });
     };
 
-    const handleTicker = () => {
-      moveBullets(selfBullets);
-      moveBullets(enemyPlaneBullets);
-      moveEnemyPlane(enemyPlanes);
-
-      // 先遍历自己所有的子弹
-      selfBullets.forEach((bullet, selfIndex) => {
-        // 检测我方子弹是否碰到了敌机
-        enemyPlanes.forEach((enemyPlane, enemyPlaneIndex) => {
-          const isIntersect = hitTestRectangle(bullet, enemyPlane);
-          if (isIntersect) {
-            selfBullets.splice(selfIndex, 1);
-
-            // 敌机需要减血
-            enemyPlane.life--;
-            if (enemyPlane.life <= 0) {
-              // todo
-              // 可以让实例发消息过来在销毁
-              // 因为需要在销毁之前播放销毁动画
-              enemyPlanes.splice(enemyPlaneIndex, 1);
-            }
-          }
-        });
-
-        // 检测是否碰到了敌方子弹
-        enemyPlaneBullets.forEach((enemyBullet, enemyBulletIndex) => {
-          const isIntersect = hitTestRectangle(bullet, enemyBullet);
-          if (isIntersect) {
-            selfBullets.splice(selfIndex, 1);
-            enemyPlaneBullets.splice(enemyBulletIndex, 1);
-          }
-        });
-      });
-
-      // 遍历敌军的子弹
-      enemyPlaneBullets.forEach((enemyBullet, enemyBulletIndex) => {
-        const isIntersect = hitTestRectangle(selfPlane, enemyBullet);
-        if (isIntersect) {
-          // 碰到我方飞机
-          // 直接 game over
-          // 跳转到结束页面
-          props.onNextPage(PAGE.end);
-        }
-      });
-
-      // 遍历敌军
-      // 我方和敌军碰撞也会结束游戏
-      enemyPlanes.forEach((enemyPlane) => {
-        const isIntersect = hitTestRectangle(selfPlane, enemyPlane);
-        if (isIntersect) {
-          // 碰到我方飞机
-          // 直接 game over
-          // 跳转到结束页面
-          props.onNextPage(PAGE.end);
-        }
-      });
+    const handleGameOver = () => {
+      props.onNextPage(PAGE.end);
     };
 
-    onUnmounted(() => {
-      game.ticker.remove(handleTicker);
-    });
-
-    onMounted(() => {
-      game.ticker.add(handleTicker);
+    useFighting({
+      selfPlane,
+      selfBullets,
+      enemyPlanes,
+      enemyPlaneBullets,
+      gameOverCallback: handleGameOver,
     });
 
     return {
@@ -229,14 +247,18 @@ export default defineComponent({
       });
     };
 
-    return h("Container", [
-      h(Map),
-      h(Plane, {
+    const createSelfPlane = () => {
+      return h(Plane, {
         x: ctx.selfPlane.x,
         y: ctx.selfPlane.y,
         speed: ctx.selfPlane.speed,
         onAttack: ctx.handlePlaneAttack,
-      }),
+      });
+    };
+
+    return h("Container", [
+      h(Map),
+      createSelfPlane(),
       ...ctx.selfBullets.map(createBullet),
       ...ctx.enemyPlaneBullets.map(createBullet),
       ...ctx.enemyPlanes.map(createEnemyPlane),
