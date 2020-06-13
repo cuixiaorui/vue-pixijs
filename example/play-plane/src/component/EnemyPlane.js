@@ -45,7 +45,7 @@ export default defineComponent({
     return h("Sprite", {
       x: ctx.x,
       y: ctx.y,
-      texture: "../../resource/assets/enemy1.png",
+      texture: "../../resource/assets/enemy.png",
     });
   },
 });
