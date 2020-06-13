@@ -52641,7 +52641,6 @@ const patchProp = (
         });
         break;
       case "texture":
-        console.log(nextValue)
         let texture = PIXI_js__WEBPACK_IMPORTED_MODULE_0__["Texture"].from(nextValue);
         el.texture = texture;
         break;
