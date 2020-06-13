@@ -1,5 +1,4 @@
 import { h, reactive, ref, computed } from "../../../../src/index.js";
-import { stage } from "../config/index.js";
 import { PAGE, getPageComponent } from "./page";
 
 export default {

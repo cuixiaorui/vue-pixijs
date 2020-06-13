@@ -1,5 +1,6 @@
 import StartPage from "./StartPage";
 import GamePage from "./GamePage";
+import EndPage from "./EndPage";
 
 export const PAGE = {
   start: "startPage",
@@ -10,7 +11,7 @@ export const PAGE = {
 const pageMap = {
   [PAGE.start]: StartPage,
   [PAGE.game]: GamePage,
-  [PAGE.end]: StartPage,
+  [PAGE.end]: EndPage,
 };
 
 export const getPageComponent = (pageName)=>{
