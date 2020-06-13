@@ -1,3 +1,4 @@
+import TWEEN from "@tweenjs/tween.js";
 import Bullet from "../Bullet.js";
 import Plane from "../Plane.js";
 import Map from "../Map.js";
@@ -40,6 +41,30 @@ const useSelfPlane = ({ x, y, speed }) => {
     speed: selfPlane.speed,
   });
 
+  // 缓动出场
+  var tween = new TWEEN.Tween({
+    x,
+    y,
+  })
+    .to({ y: y - 200 }, 500)
+    .start();
+  tween.onUpdate((obj) => {
+    selfPlane.x = obj.x;
+    selfPlane.y = obj.y;
+  });
+
+  const handleTicker = () => {
+    TWEEN.update();
+  };
+
+  onUnmounted(() => {
+    game.ticker.remove(handleTicker);
+  });
+
+  onMounted(() => {
+    game.ticker.add(handleTicker);
+  });
+
   selfPlane.x = selfPlaneX;
   selfPlane.y = selfPlaneY;
 
@@ -71,7 +96,11 @@ const useEnemyPlanes = () => {
 export default defineComponent({
   props: ["onNextPage"],
   setup(props) {
-    const selfPlane = useSelfPlane({ x: 200, y: 200, speed: 7 });
+    const selfPlane = useSelfPlane({
+      x: stage.width / 2 - 60,
+      y: stage.height,
+      speed: 7,
+    });
     const selfBullets = reactive([]);
     const enemyPlanes = useEnemyPlanes();
     const enemyPlaneBullets = reactive([]);
