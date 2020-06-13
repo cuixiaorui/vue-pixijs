@@ -52570,6 +52570,10 @@ const nodeOps = {
       element = new PIXI_js__WEBPACK_IMPORTED_MODULE_0__["Container"]();
       element.x = 0;
       element.y = 0;
+    }else if(tag === "Text"){
+      element = new PIXI_js__WEBPACK_IMPORTED_MODULE_0__["Text"]()
+      element.x = 0;
+      element.y = 0;
     }
 
     return element;
@@ -52628,29 +52632,25 @@ const patchProp = (
   parentSuspense,
   unmountChildren
 ) => {
-  switch (key) {
-    case "x":
-      el.x = nextValue;
-      break;
-    case "y":
-      el.y = nextValue;
-      break;
-    case "width":
-      el.width = nextValue;
-      break;
-    case "height":
-      el.height = nextValue;
-      break;
-    case "on":
-      Object.keys(nextValue).forEach((eventName) => {
-        const callback = nextValue[eventName];
-        el.on(eventName, callback);
-      });
-      break;
-    case "texture":
-      let texture = PIXI_js__WEBPACK_IMPORTED_MODULE_0__["Texture"].from(nextValue);
-      el.texture = texture;
-      break;
+  if (key === "on" || key === "texture" || key === "style") {
+    switch (key) {
+      case "on":
+        Object.keys(nextValue).forEach((eventName) => {
+          const callback = nextValue[eventName];
+          el.on(eventName, callback);
+        });
+        break;
+      case "texture":
+        let texture = PIXI_js__WEBPACK_IMPORTED_MODULE_0__["Texture"].from(nextValue);
+        el.texture = texture;
+        break;
+      case "style":
+        let style = new PIXI_js__WEBPACK_IMPORTED_MODULE_0__["TextStyle"](nextValue);
+        el.style = style;
+        break;
+    }
+  } else {
+    el[key] = nextValue;
   }
 };
 
@@ -91661,6 +91661,984 @@ function getResolutionOfUrl(url, defaultValue) {
 
 /***/ }),
 
+/***/ "./node_modules/@tweenjs/tween.js/dist/tween.esm.js":
+/*!**********************************************************!*\
+  !*** ./node_modules/@tweenjs/tween.js/dist/tween.esm.js ***!
+  \**********************************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* WEBPACK VAR INJECTION */(function(process) {var version = '18.5.0';
+
+/**
+ * Tween.js - Licensed under the MIT license
+ * https://github.com/tweenjs/tween.js
+ * ----------------------------------------------
+ *
+ * See https://github.com/tweenjs/tween.js/graphs/contributors for the full list of contributors.
+ * Thank you all, you're awesome!
+ */
+
+
+var _Group = function () {
+	this._tweens = {};
+	this._tweensAddedDuringUpdate = {};
+};
+
+_Group.prototype = {
+	getAll: function () {
+
+		return Object.keys(this._tweens).map(function (tweenId) {
+			return this._tweens[tweenId];
+		}.bind(this));
+
+	},
+
+	removeAll: function () {
+
+		this._tweens = {};
+
+	},
+
+	add: function (tween) {
+
+		this._tweens[tween.getId()] = tween;
+		this._tweensAddedDuringUpdate[tween.getId()] = tween;
+
+	},
+
+	remove: function (tween) {
+
+		delete this._tweens[tween.getId()];
+		delete this._tweensAddedDuringUpdate[tween.getId()];
+
+	},
+
+	update: function (time, preserve) {
+
+		var tweenIds = Object.keys(this._tweens);
+
+		if (tweenIds.length === 0) {
+			return false;
+		}
+
+		time = time !== undefined ? time : TWEEN.now();
+
+		// Tweens are updated in "batches". If you add a new tween during an
+		// update, then the new tween will be updated in the next batch.
+		// If you remove a tween during an update, it may or may not be updated.
+		// However, if the removed tween was added during the current batch,
+		// then it will not be updated.
+		while (tweenIds.length > 0) {
+			this._tweensAddedDuringUpdate = {};
+
+			for (var i = 0; i < tweenIds.length; i++) {
+
+				var tween = this._tweens[tweenIds[i]];
+
+				if (tween && tween.update(time) === false) {
+					tween._isPlaying = false;
+
+					if (!preserve) {
+						delete this._tweens[tweenIds[i]];
+					}
+				}
+			}
+
+			tweenIds = Object.keys(this._tweensAddedDuringUpdate);
+		}
+
+		return true;
+
+	}
+};
+
+var TWEEN = new _Group();
+
+TWEEN.Group = _Group;
+TWEEN._nextId = 0;
+TWEEN.nextId = function () {
+	return TWEEN._nextId++;
+};
+
+
+// Include a performance.now polyfill.
+// In node.js, use process.hrtime.
+if (typeof (self) === 'undefined' && typeof (process) !== 'undefined' && process.hrtime) {
+	TWEEN.now = function () {
+		var time = process.hrtime();
+
+		// Convert [seconds, nanoseconds] to milliseconds.
+		return time[0] * 1000 + time[1] / 1000000;
+	};
+}
+// In a browser, use self.performance.now if it is available.
+else if (typeof (self) !== 'undefined' &&
+         self.performance !== undefined &&
+		 self.performance.now !== undefined) {
+	// This must be bound, because directly assigning this function
+	// leads to an invocation exception in Chrome.
+	TWEEN.now = self.performance.now.bind(self.performance);
+}
+// Use Date.now if it is available.
+else if (Date.now !== undefined) {
+	TWEEN.now = Date.now;
+}
+// Otherwise, use 'new Date().getTime()'.
+else {
+	TWEEN.now = function () {
+		return new Date().getTime();
+	};
+}
+
+
+TWEEN.Tween = function (object, group) {
+	this._isPaused = false;
+	this._pauseStart = null;
+	this._object = object;
+	this._valuesStart = {};
+	this._valuesEnd = {};
+	this._valuesStartRepeat = {};
+	this._duration = 1000;
+	this._repeat = 0;
+	this._repeatDelayTime = undefined;
+	this._yoyo = false;
+	this._isPlaying = false;
+	this._reversed = false;
+	this._delayTime = 0;
+	this._startTime = null;
+	this._easingFunction = TWEEN.Easing.Linear.None;
+	this._interpolationFunction = TWEEN.Interpolation.Linear;
+	this._chainedTweens = [];
+	this._onStartCallback = null;
+	this._onStartCallbackFired = false;
+	this._onUpdateCallback = null;
+	this._onRepeatCallback = null;
+	this._onCompleteCallback = null;
+	this._onStopCallback = null;
+	this._group = group || TWEEN;
+	this._id = TWEEN.nextId();
+
+};
+
+TWEEN.Tween.prototype = {
+	getId: function () {
+		return this._id;
+	},
+
+	isPlaying: function () {
+		return this._isPlaying;
+	},
+
+	isPaused: function () {
+		return this._isPaused;
+	},
+
+	to: function (properties, duration) {
+
+		this._valuesEnd = Object.create(properties);
+
+		if (duration !== undefined) {
+			this._duration = duration;
+		}
+
+		return this;
+
+	},
+
+	duration: function duration(d) {
+		this._duration = d;
+		return this;
+	},
+
+	start: function (time) {
+
+		this._group.add(this);
+
+		this._isPlaying = true;
+
+		this._isPaused = false;
+
+		this._onStartCallbackFired = false;
+
+		this._startTime = time !== undefined ? typeof time === 'string' ? TWEEN.now() + parseFloat(time) : time : TWEEN.now();
+		this._startTime += this._delayTime;
+
+		for (var property in this._valuesEnd) {
+
+			// Check if an Array was provided as property value
+			if (this._valuesEnd[property] instanceof Array) {
+
+				if (this._valuesEnd[property].length === 0) {
+					continue;
+				}
+
+				// Create a local copy of the Array with the start value at the front
+				this._valuesEnd[property] = [this._object[property]].concat(this._valuesEnd[property]);
+
+			}
+
+			// If `to()` specifies a property that doesn't exist in the source object,
+			// we should not set that property in the object
+			if (this._object[property] === undefined) {
+				continue;
+			}
+
+			// Save the starting value, but only once.
+			if (typeof(this._valuesStart[property]) === 'undefined') {
+				this._valuesStart[property] = this._object[property];
+			}
+
+			if ((this._valuesStart[property] instanceof Array) === false) {
+				this._valuesStart[property] *= 1.0; // Ensures we're using numbers, not strings
+			}
+
+			this._valuesStartRepeat[property] = this._valuesStart[property] || 0;
+
+		}
+
+		return this;
+
+	},
+
+	stop: function () {
+
+		if (!this._isPlaying) {
+			return this;
+		}
+
+		this._group.remove(this);
+
+		this._isPlaying = false;
+
+		this._isPaused = false;
+
+		if (this._onStopCallback !== null) {
+			this._onStopCallback(this._object);
+		}
+
+		this.stopChainedTweens();
+		return this;
+
+	},
+
+	end: function () {
+
+		this.update(Infinity);
+		return this;
+
+	},
+
+	pause: function(time) {
+
+		if (this._isPaused || !this._isPlaying) {
+			return this;
+		}
+
+		this._isPaused = true;
+
+		this._pauseStart = time === undefined ? TWEEN.now() : time;
+
+		this._group.remove(this);
+
+		return this;
+
+	},
+
+	resume: function(time) {
+
+		if (!this._isPaused || !this._isPlaying) {
+			return this;
+		}
+
+		this._isPaused = false;
+
+		this._startTime += (time === undefined ? TWEEN.now() : time)
+			- this._pauseStart;
+
+		this._pauseStart = 0;
+
+		this._group.add(this);
+
+		return this;
+
+	},
+
+	stopChainedTweens: function () {
+
+		for (var i = 0, numChainedTweens = this._chainedTweens.length; i < numChainedTweens; i++) {
+			this._chainedTweens[i].stop();
+		}
+
+	},
+
+	group: function (group) {
+		this._group = group;
+		return this;
+	},
+
+	delay: function (amount) {
+
+		this._delayTime = amount;
+		return this;
+
+	},
+
+	repeat: function (times) {
+
+		this._repeat = times;
+		return this;
+
+	},
+
+	repeatDelay: function (amount) {
+
+		this._repeatDelayTime = amount;
+		return this;
+
+	},
+
+	yoyo: function (yoyo) {
+
+		this._yoyo = yoyo;
+		return this;
+
+	},
+
+	easing: function (easingFunction) {
+
+		this._easingFunction = easingFunction;
+		return this;
+
+	},
+
+	interpolation: function (interpolationFunction) {
+
+		this._interpolationFunction = interpolationFunction;
+		return this;
+
+	},
+
+	chain: function () {
+
+		this._chainedTweens = arguments;
+		return this;
+
+	},
+
+	onStart: function (callback) {
+
+		this._onStartCallback = callback;
+		return this;
+
+	},
+
+	onUpdate: function (callback) {
+
+		this._onUpdateCallback = callback;
+		return this;
+
+	},
+
+	onRepeat: function onRepeat(callback) {
+
+		this._onRepeatCallback = callback;
+		return this;
+
+	},
+
+	onComplete: function (callback) {
+
+		this._onCompleteCallback = callback;
+		return this;
+
+	},
+
+	onStop: function (callback) {
+
+		this._onStopCallback = callback;
+		return this;
+
+	},
+
+	update: function (time) {
+
+		var property;
+		var elapsed;
+		var value;
+
+		if (time < this._startTime) {
+			return true;
+		}
+
+		if (this._onStartCallbackFired === false) {
+
+			if (this._onStartCallback !== null) {
+				this._onStartCallback(this._object);
+			}
+
+			this._onStartCallbackFired = true;
+		}
+
+		elapsed = (time - this._startTime) / this._duration;
+		elapsed = (this._duration === 0 || elapsed > 1) ? 1 : elapsed;
+
+		value = this._easingFunction(elapsed);
+
+		for (property in this._valuesEnd) {
+
+			// Don't update properties that do not exist in the source object
+			if (this._valuesStart[property] === undefined) {
+				continue;
+			}
+
+			var start = this._valuesStart[property] || 0;
+			var end = this._valuesEnd[property];
+
+			if (end instanceof Array) {
+
+				this._object[property] = this._interpolationFunction(end, value);
+
+			} else {
+
+				// Parses relative end values with start as base (e.g.: +10, -3)
+				if (typeof (end) === 'string') {
+
+					if (end.charAt(0) === '+' || end.charAt(0) === '-') {
+						end = start + parseFloat(end);
+					} else {
+						end = parseFloat(end);
+					}
+				}
+
+				// Protect against non numeric properties.
+				if (typeof (end) === 'number') {
+					this._object[property] = start + (end - start) * value;
+				}
+
+			}
+
+		}
+
+		if (this._onUpdateCallback !== null) {
+			this._onUpdateCallback(this._object, elapsed);
+		}
+
+		if (elapsed === 1) {
+
+			if (this._repeat > 0) {
+
+				if (isFinite(this._repeat)) {
+					this._repeat--;
+				}
+
+				// Reassign starting values, restart by making startTime = now
+				for (property in this._valuesStartRepeat) {
+
+					if (typeof (this._valuesEnd[property]) === 'string') {
+						this._valuesStartRepeat[property] = this._valuesStartRepeat[property] + parseFloat(this._valuesEnd[property]);
+					}
+
+					if (this._yoyo) {
+						var tmp = this._valuesStartRepeat[property];
+
+						this._valuesStartRepeat[property] = this._valuesEnd[property];
+						this._valuesEnd[property] = tmp;
+					}
+
+					this._valuesStart[property] = this._valuesStartRepeat[property];
+
+				}
+
+				if (this._yoyo) {
+					this._reversed = !this._reversed;
+				}
+
+				if (this._repeatDelayTime !== undefined) {
+					this._startTime = time + this._repeatDelayTime;
+				} else {
+					this._startTime = time + this._delayTime;
+				}
+
+				if (this._onRepeatCallback !== null) {
+					this._onRepeatCallback(this._object);
+				}
+
+				return true;
+
+			} else {
+
+				if (this._onCompleteCallback !== null) {
+
+					this._onCompleteCallback(this._object);
+				}
+
+				for (var i = 0, numChainedTweens = this._chainedTweens.length; i < numChainedTweens; i++) {
+					// Make the chained tweens start exactly at the time they should,
+					// even if the `update()` method was called way past the duration of the tween
+					this._chainedTweens[i].start(this._startTime + this._duration);
+				}
+
+				return false;
+
+			}
+
+		}
+
+		return true;
+
+	}
+};
+
+
+TWEEN.Easing = {
+
+	Linear: {
+
+		None: function (k) {
+
+			return k;
+
+		}
+
+	},
+
+	Quadratic: {
+
+		In: function (k) {
+
+			return k * k;
+
+		},
+
+		Out: function (k) {
+
+			return k * (2 - k);
+
+		},
+
+		InOut: function (k) {
+
+			if ((k *= 2) < 1) {
+				return 0.5 * k * k;
+			}
+
+			return - 0.5 * (--k * (k - 2) - 1);
+
+		}
+
+	},
+
+	Cubic: {
+
+		In: function (k) {
+
+			return k * k * k;
+
+		},
+
+		Out: function (k) {
+
+			return --k * k * k + 1;
+
+		},
+
+		InOut: function (k) {
+
+			if ((k *= 2) < 1) {
+				return 0.5 * k * k * k;
+			}
+
+			return 0.5 * ((k -= 2) * k * k + 2);
+
+		}
+
+	},
+
+	Quartic: {
+
+		In: function (k) {
+
+			return k * k * k * k;
+
+		},
+
+		Out: function (k) {
+
+			return 1 - (--k * k * k * k);
+
+		},
+
+		InOut: function (k) {
+
+			if ((k *= 2) < 1) {
+				return 0.5 * k * k * k * k;
+			}
+
+			return - 0.5 * ((k -= 2) * k * k * k - 2);
+
+		}
+
+	},
+
+	Quintic: {
+
+		In: function (k) {
+
+			return k * k * k * k * k;
+
+		},
+
+		Out: function (k) {
+
+			return --k * k * k * k * k + 1;
+
+		},
+
+		InOut: function (k) {
+
+			if ((k *= 2) < 1) {
+				return 0.5 * k * k * k * k * k;
+			}
+
+			return 0.5 * ((k -= 2) * k * k * k * k + 2);
+
+		}
+
+	},
+
+	Sinusoidal: {
+
+		In: function (k) {
+
+			return 1 - Math.cos(k * Math.PI / 2);
+
+		},
+
+		Out: function (k) {
+
+			return Math.sin(k * Math.PI / 2);
+
+		},
+
+		InOut: function (k) {
+
+			return 0.5 * (1 - Math.cos(Math.PI * k));
+
+		}
+
+	},
+
+	Exponential: {
+
+		In: function (k) {
+
+			return k === 0 ? 0 : Math.pow(1024, k - 1);
+
+		},
+
+		Out: function (k) {
+
+			return k === 1 ? 1 : 1 - Math.pow(2, - 10 * k);
+
+		},
+
+		InOut: function (k) {
+
+			if (k === 0) {
+				return 0;
+			}
+
+			if (k === 1) {
+				return 1;
+			}
+
+			if ((k *= 2) < 1) {
+				return 0.5 * Math.pow(1024, k - 1);
+			}
+
+			return 0.5 * (- Math.pow(2, - 10 * (k - 1)) + 2);
+
+		}
+
+	},
+
+	Circular: {
+
+		In: function (k) {
+
+			return 1 - Math.sqrt(1 - k * k);
+
+		},
+
+		Out: function (k) {
+
+			return Math.sqrt(1 - (--k * k));
+
+		},
+
+		InOut: function (k) {
+
+			if ((k *= 2) < 1) {
+				return - 0.5 * (Math.sqrt(1 - k * k) - 1);
+			}
+
+			return 0.5 * (Math.sqrt(1 - (k -= 2) * k) + 1);
+
+		}
+
+	},
+
+	Elastic: {
+
+		In: function (k) {
+
+			if (k === 0) {
+				return 0;
+			}
+
+			if (k === 1) {
+				return 1;
+			}
+
+			return -Math.pow(2, 10 * (k - 1)) * Math.sin((k - 1.1) * 5 * Math.PI);
+
+		},
+
+		Out: function (k) {
+
+			if (k === 0) {
+				return 0;
+			}
+
+			if (k === 1) {
+				return 1;
+			}
+
+			return Math.pow(2, -10 * k) * Math.sin((k - 0.1) * 5 * Math.PI) + 1;
+
+		},
+
+		InOut: function (k) {
+
+			if (k === 0) {
+				return 0;
+			}
+
+			if (k === 1) {
+				return 1;
+			}
+
+			k *= 2;
+
+			if (k < 1) {
+				return -0.5 * Math.pow(2, 10 * (k - 1)) * Math.sin((k - 1.1) * 5 * Math.PI);
+			}
+
+			return 0.5 * Math.pow(2, -10 * (k - 1)) * Math.sin((k - 1.1) * 5 * Math.PI) + 1;
+
+		}
+
+	},
+
+	Back: {
+
+		In: function (k) {
+
+			var s = 1.70158;
+
+			return k * k * ((s + 1) * k - s);
+
+		},
+
+		Out: function (k) {
+
+			var s = 1.70158;
+
+			return --k * k * ((s + 1) * k + s) + 1;
+
+		},
+
+		InOut: function (k) {
+
+			var s = 1.70158 * 1.525;
+
+			if ((k *= 2) < 1) {
+				return 0.5 * (k * k * ((s + 1) * k - s));
+			}
+
+			return 0.5 * ((k -= 2) * k * ((s + 1) * k + s) + 2);
+
+		}
+
+	},
+
+	Bounce: {
+
+		In: function (k) {
+
+			return 1 - TWEEN.Easing.Bounce.Out(1 - k);
+
+		},
+
+		Out: function (k) {
+
+			if (k < (1 / 2.75)) {
+				return 7.5625 * k * k;
+			} else if (k < (2 / 2.75)) {
+				return 7.5625 * (k -= (1.5 / 2.75)) * k + 0.75;
+			} else if (k < (2.5 / 2.75)) {
+				return 7.5625 * (k -= (2.25 / 2.75)) * k + 0.9375;
+			} else {
+				return 7.5625 * (k -= (2.625 / 2.75)) * k + 0.984375;
+			}
+
+		},
+
+		InOut: function (k) {
+
+			if (k < 0.5) {
+				return TWEEN.Easing.Bounce.In(k * 2) * 0.5;
+			}
+
+			return TWEEN.Easing.Bounce.Out(k * 2 - 1) * 0.5 + 0.5;
+
+		}
+
+	}
+
+};
+
+TWEEN.Interpolation = {
+
+	Linear: function (v, k) {
+
+		var m = v.length - 1;
+		var f = m * k;
+		var i = Math.floor(f);
+		var fn = TWEEN.Interpolation.Utils.Linear;
+
+		if (k < 0) {
+			return fn(v[0], v[1], f);
+		}
+
+		if (k > 1) {
+			return fn(v[m], v[m - 1], m - f);
+		}
+
+		return fn(v[i], v[i + 1 > m ? m : i + 1], f - i);
+
+	},
+
+	Bezier: function (v, k) {
+
+		var b = 0;
+		var n = v.length - 1;
+		var pw = Math.pow;
+		var bn = TWEEN.Interpolation.Utils.Bernstein;
+
+		for (var i = 0; i <= n; i++) {
+			b += pw(1 - k, n - i) * pw(k, i) * v[i] * bn(n, i);
+		}
+
+		return b;
+
+	},
+
+	CatmullRom: function (v, k) {
+
+		var m = v.length - 1;
+		var f = m * k;
+		var i = Math.floor(f);
+		var fn = TWEEN.Interpolation.Utils.CatmullRom;
+
+		if (v[0] === v[m]) {
+
+			if (k < 0) {
+				i = Math.floor(f = m * (1 + k));
+			}
+
+			return fn(v[(i - 1 + m) % m], v[i], v[(i + 1) % m], v[(i + 2) % m], f - i);
+
+		} else {
+
+			if (k < 0) {
+				return v[0] - (fn(v[0], v[0], v[1], v[1], -f) - v[0]);
+			}
+
+			if (k > 1) {
+				return v[m] - (fn(v[m], v[m], v[m - 1], v[m - 1], f - m) - v[m]);
+			}
+
+			return fn(v[i ? i - 1 : 0], v[i], v[m < i + 1 ? m : i + 1], v[m < i + 2 ? m : i + 2], f - i);
+
+		}
+
+	},
+
+	Utils: {
+
+		Linear: function (p0, p1, t) {
+
+			return (p1 - p0) * t + p0;
+
+		},
+
+		Bernstein: function (n, i) {
+
+			var fc = TWEEN.Interpolation.Utils.Factorial;
+
+			return fc(n) / fc(i) / fc(n - i);
+
+		},
+
+		Factorial: (function () {
+
+			var a = [1];
+
+			return function (n) {
+
+				var s = 1;
+
+				if (a[n]) {
+					return a[n];
+				}
+
+				for (var i = n; i > 1; i--) {
+					s *= i;
+				}
+
+				a[n] = s;
+				return s;
+
+			};
+
+		})(),
+
+		CatmullRom: function (p0, p1, p2, p3, t) {
+
+			var v0 = (p2 - p0) * 0.5;
+			var v1 = (p3 - p1) * 0.5;
+			var t2 = t * t;
+			var t3 = t * t2;
+
+			return (2 * p1 - 2 * p2 + v0 + v1) * t3 + (- 3 * p1 + 3 * p2 - 2 * v0 - v1) * t2 + v0 * t + p1;
+
+		}
+
+	}
+
+};
+TWEEN.version = version;
+
+/* harmony default export */ __webpack_exports__["default"] = (TWEEN);
+
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./../../../process/browser.js */ "./node_modules/process/browser.js")))
+
+/***/ }),
+
 /***/ "./node_modules/PIXI.js/lib/pixi.es.js":
 /*!*********************************************!*\
   !*** ./node_modules/PIXI.js/lib/pixi.es.js ***!
@@ -99817,7 +100795,7 @@ __webpack_require__.r(__webpack_exports__);
     return Object(_src_index__WEBPACK_IMPORTED_MODULE_2__["h"])("Sprite", {
       x: ctx.x,
       y: ctx.y,
-      texture: "../../resource/assets/enemy1.png",
+      texture: "../../resource/assets/enemy.png",
     });
   },
 }));
@@ -99834,153 +100812,32 @@ __webpack_require__.r(__webpack_exports__);
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony import */ var _Bullet_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./Bullet.js */ "./src/component/Bullet.js");
-/* harmony import */ var _Plane_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./Plane.js */ "./src/component/Plane.js");
-/* harmony import */ var _Map_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./Map.js */ "./src/component/Map.js");
-/* harmony import */ var _EnemyPlane__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./EnemyPlane */ "./src/component/EnemyPlane.js");
-/* harmony import */ var _game__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../../game */ "./game.js");
-/* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../utils */ "./src/utils/index.js");
-/* harmony import */ var _src_index_js__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../../../../src/index.js */ "../../src/index.js");
-/* harmony import */ var _moveBullets__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../moveBullets */ "./src/moveBullets.js");
-/* harmony import */ var _moveEnemyPlane__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ../moveEnemyPlane */ "./src/moveEnemyPlane.js");
-/* harmony import */ var _config_index_js__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ../config/index.js */ "./src/config/index.js");
+/* harmony import */ var _src_index_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../../../src/index.js */ "../../src/index.js");
+/* harmony import */ var _page__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./page */ "./src/component/page/index.js");
 
 
-
-
-
-
-
-
-
-
-
-let hashCode = 0;
-const createHashCode = () => {
-  return hashCode++;
-};
 
 /* harmony default export */ __webpack_exports__["default"] = ({
   setup() {
-    //生产敌机
-    const createEnemyPlaneData = (x) => {
-      return {
-        x,
-        y: -200,
-        width: 217,
-        height: 263,
-        life: 3,
-      };
-    };
-    const selfBullets = Object(_src_index_js__WEBPACK_IMPORTED_MODULE_6__["reactive"])([]);
-    const enemyPlanes = Object(_src_index_js__WEBPACK_IMPORTED_MODULE_6__["reactive"])([]);
-    const enemyPlaneBullets = Object(_src_index_js__WEBPACK_IMPORTED_MODULE_6__["reactive"])([]);
-
-    setInterval(() => {
-      const x = Math.floor((1 + _config_index_js__WEBPACK_IMPORTED_MODULE_9__["stage"].width) * Math.random());
-      enemyPlanes.push(createEnemyPlaneData(x));
-    }, 1000);
-
-    const handleBulletDestroy = ({ id }) => {
-      const index = selfBullets.findIndex((info) => info.id == id);
-      if (index !== -1) {
-        selfBullets.splice(index, 1);
-      }
-    };
-
-    const handlePlaneAttack = ({ x, y }) => {
-      const id = createHashCode();
-      const width = 26;
-      const height = 37;
-      const dir = -1;
-      selfBullets.push({ x, y, id, width, height, dir });
-    };
-
-    const handleEnemyPlaneAttack = ({ x, y }) => {
-      const id = createHashCode();
-      const width = 26;
-      const height = 37;
-      const dir = 1;
-      enemyPlaneBullets.push({ x, y, id, width, height, dir });
-    };
-
-    _game__WEBPACK_IMPORTED_MODULE_4__["game"].ticker.add(() => {
-      Object(_moveBullets__WEBPACK_IMPORTED_MODULE_7__["moveBullets"])(selfBullets);
-      Object(_moveBullets__WEBPACK_IMPORTED_MODULE_7__["moveBullets"])(enemyPlaneBullets);
-      Object(_moveEnemyPlane__WEBPACK_IMPORTED_MODULE_8__["moveEnemyPlane"])(enemyPlanes);
-
-      // 先遍历所有的子弹
-      selfBullets.forEach((bullet, selfIndex) => {
-        // 检测我方子弹是否碰到了敌机
-        enemyPlanes.forEach((enemyPlane, enemyPlaneIndex) => {
-          const isIntersect = Object(_utils__WEBPACK_IMPORTED_MODULE_5__["hitTestRectangle"])(bullet, enemyPlane);
-          if (isIntersect) {
-            selfBullets.splice(selfIndex, 1);
-
-            // 敌机需要减血
-            enemyPlane.life--;
-            if (enemyPlane.life <= 0) {
-              // todo
-              // 可以让实例发消息过来在销毁
-              // 因为需要在销毁之前播放销毁动画
-              enemyPlanes.splice(enemyPlaneIndex, 1);
-            }
-          }
-        });
-
-        // 检测是否碰到了敌方子弹
-        enemyPlaneBullets.forEach((enemyBullet, enemyBulletIndex) => {
-          const isIntersect = Object(_utils__WEBPACK_IMPORTED_MODULE_5__["hitTestRectangle"])(bullet, enemyBullet);
-          if (isIntersect) {
-            selfBullets.splice(selfIndex, 1);
-            enemyPlaneBullets.splice(enemyBulletIndex, 1);
-          }
-        });
-      });
+    const currentPageName = Object(_src_index_js__WEBPACK_IMPORTED_MODULE_0__["ref"])(_page__WEBPACK_IMPORTED_MODULE_1__["PAGE"].start);
+    const currentPage = Object(_src_index_js__WEBPACK_IMPORTED_MODULE_0__["computed"])(() => {
+      return Object(_page__WEBPACK_IMPORTED_MODULE_1__["getPageComponent"])(currentPageName.value);
     });
+    const handleNextPage = (nextPage) => {
+      currentPageName.value = nextPage;
+    };
 
     return {
-      enemyPlanes,
-      selfBullets,
-      enemyPlaneBullets,
-      handleBulletDestroy,
-      handlePlaneAttack,
-      handleEnemyPlaneAttack,
+      currentPage,
+      handleNextPage,
     };
   },
 
   render(ctx) {
-    const createBullet = (info, index) => {
-      return Object(_src_index_js__WEBPACK_IMPORTED_MODULE_6__["h"])(_Bullet_js__WEBPACK_IMPORTED_MODULE_0__["default"], {
-        key: "Bullet" + info.id,
-        x: info.x,
-        y: info.y,
-        id: info.id,
-        width: info.width,
-        height: info.height,
-        onDestroy: ctx.handleBulletDestroy,
-      });
-    };
-
-    const createEnemyPlane = (info, index) => {
-      return Object(_src_index_js__WEBPACK_IMPORTED_MODULE_6__["h"])(_EnemyPlane__WEBPACK_IMPORTED_MODULE_3__["default"], {
-        key: "EnemyPlane" + index,
-        x: info.x,
-        y: info.y,
-        height: info.height,
-        width: info.width,
-        onAttack: ctx.handleEnemyPlaneAttack,
-      });
-    };
-
-    return Object(_src_index_js__WEBPACK_IMPORTED_MODULE_6__["h"])("Container", [
-      Object(_src_index_js__WEBPACK_IMPORTED_MODULE_6__["h"])(_Map_js__WEBPACK_IMPORTED_MODULE_2__["default"]),
-      Object(_src_index_js__WEBPACK_IMPORTED_MODULE_6__["h"])(_Plane_js__WEBPACK_IMPORTED_MODULE_1__["default"], {
-        onAttack: ctx.handlePlaneAttack,
+    return Object(_src_index_js__WEBPACK_IMPORTED_MODULE_0__["h"])("Container", [
+      Object(_src_index_js__WEBPACK_IMPORTED_MODULE_0__["h"])(ctx.currentPage, {
+        onNextPage: ctx.handleNextPage,
       }),
-      ...ctx.selfBullets.map(createBullet),
-      ...ctx.enemyPlaneBullets.map(createBullet),
-      ...ctx.enemyPlanes.map(createEnemyPlane),
     ]);
   },
 });
@@ -100070,11 +100927,14 @@ __webpack_require__.r(__webpack_exports__);
 
 // 飞机
 /* harmony default export */ __webpack_exports__["default"] = (Object(_src_index__WEBPACK_IMPORTED_MODULE_2__["defineComponent"])({
+  props: ["x", "y", "speed"],
   setup(props, ctx) {
-    const { x, y } = Object(_use__WEBPACK_IMPORTED_MODULE_1__["useKeyboardMove"])({
-      x: 200,
-      y: 400,
-      speed: 7,
+
+    const x = Object(_src_index__WEBPACK_IMPORTED_MODULE_2__["ref"])(props.x);
+    const y = Object(_src_index__WEBPACK_IMPORTED_MODULE_2__["ref"])(props.y);
+    Object(_src_index__WEBPACK_IMPORTED_MODULE_2__["watch"])(props, (newProps) => {
+      x.value = newProps.x;
+      y.value = newProps.y;
     });
 
     attackHandler(ctx, x, y);
@@ -100132,6 +100992,420 @@ function attackHandler(ctx, x, y) {
     },
   });
 }
+
+
+/***/ }),
+
+/***/ "./src/component/page/EndPage.js":
+/*!***************************************!*\
+  !*** ./src/component/page/EndPage.js ***!
+  \***************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _config__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../config */ "./src/config/index.js");
+/* harmony import */ var _page__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../page */ "./src/component/page/index.js");
+/* harmony import */ var _src_index__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../../../../src/index */ "../../src/index.js");
+
+
+
+
+/* harmony default export */ __webpack_exports__["default"] = (Object(_src_index__WEBPACK_IMPORTED_MODULE_2__["defineComponent"])({
+  props: ["onNextPage"],
+  setup(props, ctx) {
+    const handleGoToGame = () => {
+      props.onNextPage(_page__WEBPACK_IMPORTED_MODULE_1__["PAGE"].game);
+    };
+
+    return {
+      handleGoToGame,
+    };
+  },
+  render(ctx) {
+    return Object(_src_index__WEBPACK_IMPORTED_MODULE_2__["h"])("Container", [
+      Object(_src_index__WEBPACK_IMPORTED_MODULE_2__["h"])("Text", {
+        text: "结束页面",
+        x: _config__WEBPACK_IMPORTED_MODULE_0__["stage"].width / 2 - 50,
+        y: 200,
+        style: {
+          fill: ["#ffffff", "#00ff99"],
+        },
+      }),
+      Object(_src_index__WEBPACK_IMPORTED_MODULE_2__["h"])("Text", {
+        text: "再来一局",
+        x: _config__WEBPACK_IMPORTED_MODULE_0__["stage"].width / 2 - 50,
+        y: _config__WEBPACK_IMPORTED_MODULE_0__["stage"].height - 300,
+        style: {
+          fill: "#ff0000",
+        },
+        on: {
+          pointertap: ctx.handleGoToGame,
+        },
+        interactive: true,
+        buttonMode: true,
+      }),
+    ]);
+  },
+}));
+
+
+/***/ }),
+
+/***/ "./src/component/page/GamePage.js":
+/*!****************************************!*\
+  !*** ./src/component/page/GamePage.js ***!
+  \****************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _tweenjs_tween_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @tweenjs/tween.js */ "./node_modules/@tweenjs/tween.js/dist/tween.esm.js");
+/* harmony import */ var _Bullet_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../Bullet.js */ "./src/component/Bullet.js");
+/* harmony import */ var _Plane_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../Plane.js */ "./src/component/Plane.js");
+/* harmony import */ var _Map_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../Map.js */ "./src/component/Map.js");
+/* harmony import */ var _EnemyPlane__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../EnemyPlane */ "./src/component/EnemyPlane.js");
+/* harmony import */ var _game__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../../../game */ "./game.js");
+/* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../../utils */ "./src/utils/index.js");
+/* harmony import */ var _src_index_js__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../../../../../src/index.js */ "../../src/index.js");
+/* harmony import */ var _moveBullets__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ../../moveBullets */ "./src/moveBullets.js");
+/* harmony import */ var _moveEnemyPlane__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ../../moveEnemyPlane */ "./src/moveEnemyPlane.js");
+/* harmony import */ var _config_index_js__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ../../config/index.js */ "./src/config/index.js");
+/* harmony import */ var _use__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ../../use */ "./src/use/index.js");
+/* harmony import */ var _index__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! ./index */ "./src/component/page/index.js");
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+let hashCode = 0;
+const createHashCode = () => {
+  return hashCode++;
+};
+
+const useSelfPlane = ({ x, y, speed }) => {
+  const selfPlane = Object(_src_index_js__WEBPACK_IMPORTED_MODULE_7__["reactive"])({
+    x,
+    y,
+    speed,
+    width: 119,
+    height: 181,
+  });
+
+  const { x: selfPlaneX, y: selfPlaneY } = Object(_use__WEBPACK_IMPORTED_MODULE_11__["useKeyboardMove"])({
+    x: selfPlane.x,
+    y: selfPlane.y,
+    speed: selfPlane.speed,
+  });
+
+  // 缓动出场
+  var tween = new _tweenjs_tween_js__WEBPACK_IMPORTED_MODULE_0__["default"].Tween({
+    x,
+    y,
+  })
+    .to({ y: y - 200 }, 500)
+    .start();
+  tween.onUpdate((obj) => {
+    selfPlane.x = obj.x;
+    selfPlane.y = obj.y;
+  });
+
+  const handleTicker = () => {
+    _tweenjs_tween_js__WEBPACK_IMPORTED_MODULE_0__["default"].update();
+  };
+
+  Object(_src_index_js__WEBPACK_IMPORTED_MODULE_7__["onUnmounted"])(() => {
+    _game__WEBPACK_IMPORTED_MODULE_5__["game"].ticker.remove(handleTicker);
+  });
+
+  Object(_src_index_js__WEBPACK_IMPORTED_MODULE_7__["onMounted"])(() => {
+    _game__WEBPACK_IMPORTED_MODULE_5__["game"].ticker.add(handleTicker);
+  });
+
+  selfPlane.x = selfPlaneX;
+  selfPlane.y = selfPlaneY;
+
+  return selfPlane;
+};
+
+const useEnemyPlanes = () => {
+  //生产敌机
+  const createEnemyPlaneData = (x) => {
+    return {
+      x,
+      y: -200,
+      width: 217,
+      height: 263,
+      life: 3,
+    };
+  };
+
+  const enemyPlanes = Object(_src_index_js__WEBPACK_IMPORTED_MODULE_7__["reactive"])([]);
+
+  setInterval(() => {
+    const x = Math.floor((1 + _config_index_js__WEBPACK_IMPORTED_MODULE_10__["stage"].width) * Math.random());
+    enemyPlanes.push(createEnemyPlaneData(x));
+  }, 1000);
+
+  return enemyPlanes;
+};
+
+/* harmony default export */ __webpack_exports__["default"] = (Object(_src_index_js__WEBPACK_IMPORTED_MODULE_7__["defineComponent"])({
+  props: ["onNextPage"],
+  setup(props) {
+    const selfPlane = useSelfPlane({
+      x: _config_index_js__WEBPACK_IMPORTED_MODULE_10__["stage"].width / 2 - 60,
+      y: _config_index_js__WEBPACK_IMPORTED_MODULE_10__["stage"].height,
+      speed: 7,
+    });
+    const selfBullets = Object(_src_index_js__WEBPACK_IMPORTED_MODULE_7__["reactive"])([]);
+    const enemyPlanes = useEnemyPlanes();
+    const enemyPlaneBullets = Object(_src_index_js__WEBPACK_IMPORTED_MODULE_7__["reactive"])([]);
+
+    const handleBulletDestroy = ({ id }) => {
+      const index = selfBullets.findIndex((info) => info.id == id);
+      if (index !== -1) {
+        selfBullets.splice(index, 1);
+      }
+    };
+
+    const handlePlaneAttack = ({ x, y }) => {
+      const id = createHashCode();
+      const width = 26;
+      const height = 37;
+      const dir = -1;
+      selfBullets.push({ x, y, id, width, height, dir });
+    };
+
+    const handleEnemyPlaneAttack = ({ x, y }) => {
+      const id = createHashCode();
+      const width = 26;
+      const height = 37;
+      const dir = 1;
+      enemyPlaneBullets.push({ x, y, id, width, height, dir });
+    };
+
+    const handleTicker = () => {
+      Object(_moveBullets__WEBPACK_IMPORTED_MODULE_8__["moveBullets"])(selfBullets);
+      Object(_moveBullets__WEBPACK_IMPORTED_MODULE_8__["moveBullets"])(enemyPlaneBullets);
+      Object(_moveEnemyPlane__WEBPACK_IMPORTED_MODULE_9__["moveEnemyPlane"])(enemyPlanes);
+
+      // 先遍历自己所有的子弹
+      selfBullets.forEach((bullet, selfIndex) => {
+        // 检测我方子弹是否碰到了敌机
+        enemyPlanes.forEach((enemyPlane, enemyPlaneIndex) => {
+          const isIntersect = Object(_utils__WEBPACK_IMPORTED_MODULE_6__["hitTestRectangle"])(bullet, enemyPlane);
+          if (isIntersect) {
+            selfBullets.splice(selfIndex, 1);
+
+            // 敌机需要减血
+            enemyPlane.life--;
+            if (enemyPlane.life <= 0) {
+              // todo
+              // 可以让实例发消息过来在销毁
+              // 因为需要在销毁之前播放销毁动画
+              enemyPlanes.splice(enemyPlaneIndex, 1);
+            }
+          }
+        });
+
+        // 检测是否碰到了敌方子弹
+        enemyPlaneBullets.forEach((enemyBullet, enemyBulletIndex) => {
+          const isIntersect = Object(_utils__WEBPACK_IMPORTED_MODULE_6__["hitTestRectangle"])(bullet, enemyBullet);
+          if (isIntersect) {
+            selfBullets.splice(selfIndex, 1);
+            enemyPlaneBullets.splice(enemyBulletIndex, 1);
+          }
+        });
+      });
+
+      // 遍历敌军的子弹
+      enemyPlaneBullets.forEach((enemyBullet, enemyBulletIndex) => {
+        const isIntersect = Object(_utils__WEBPACK_IMPORTED_MODULE_6__["hitTestRectangle"])(selfPlane, enemyBullet);
+        if (isIntersect) {
+          // 碰到我方飞机
+          // 直接 game over
+          // 跳转到结束页面
+          props.onNextPage(_index__WEBPACK_IMPORTED_MODULE_12__["PAGE"].end);
+        }
+      });
+
+      // 遍历敌军
+      // 我方和敌军碰撞也会结束游戏
+      enemyPlanes.forEach((enemyPlane) => {
+        const isIntersect = Object(_utils__WEBPACK_IMPORTED_MODULE_6__["hitTestRectangle"])(selfPlane, enemyPlane);
+        if (isIntersect) {
+          // 碰到我方飞机
+          // 直接 game over
+          // 跳转到结束页面
+          props.onNextPage(_index__WEBPACK_IMPORTED_MODULE_12__["PAGE"].end);
+        }
+      });
+    };
+
+    Object(_src_index_js__WEBPACK_IMPORTED_MODULE_7__["onUnmounted"])(() => {
+      _game__WEBPACK_IMPORTED_MODULE_5__["game"].ticker.remove(handleTicker);
+    });
+
+    Object(_src_index_js__WEBPACK_IMPORTED_MODULE_7__["onMounted"])(() => {
+      _game__WEBPACK_IMPORTED_MODULE_5__["game"].ticker.add(handleTicker);
+    });
+
+    return {
+      selfPlane,
+      enemyPlanes,
+      selfBullets,
+      enemyPlaneBullets,
+      handleBulletDestroy,
+      handlePlaneAttack,
+      handleEnemyPlaneAttack,
+    };
+  },
+
+  render(ctx) {
+    const createBullet = (info, index) => {
+      return Object(_src_index_js__WEBPACK_IMPORTED_MODULE_7__["h"])(_Bullet_js__WEBPACK_IMPORTED_MODULE_1__["default"], {
+        key: "Bullet" + info.id,
+        x: info.x,
+        y: info.y,
+        id: info.id,
+        width: info.width,
+        height: info.height,
+        onDestroy: ctx.handleBulletDestroy,
+      });
+    };
+
+    const createEnemyPlane = (info, index) => {
+      return Object(_src_index_js__WEBPACK_IMPORTED_MODULE_7__["h"])(_EnemyPlane__WEBPACK_IMPORTED_MODULE_4__["default"], {
+        key: "EnemyPlane" + index,
+        x: info.x,
+        y: info.y,
+        height: info.height,
+        width: info.width,
+        onAttack: ctx.handleEnemyPlaneAttack,
+      });
+    };
+
+    return Object(_src_index_js__WEBPACK_IMPORTED_MODULE_7__["h"])("Container", [
+      Object(_src_index_js__WEBPACK_IMPORTED_MODULE_7__["h"])(_Map_js__WEBPACK_IMPORTED_MODULE_3__["default"]),
+      Object(_src_index_js__WEBPACK_IMPORTED_MODULE_7__["h"])(_Plane_js__WEBPACK_IMPORTED_MODULE_2__["default"], {
+        x: ctx.selfPlane.x,
+        y: ctx.selfPlane.y,
+        speed: ctx.selfPlane.speed,
+        onAttack: ctx.handlePlaneAttack,
+      }),
+      ...ctx.selfBullets.map(createBullet),
+      ...ctx.enemyPlaneBullets.map(createBullet),
+      ...ctx.enemyPlanes.map(createEnemyPlane),
+    ]);
+  },
+}));
+
+
+/***/ }),
+
+/***/ "./src/component/page/StartPage.js":
+/*!*****************************************!*\
+  !*** ./src/component/page/StartPage.js ***!
+  \*****************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _config__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../config */ "./src/config/index.js");
+/* harmony import */ var _page__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../page */ "./src/component/page/index.js");
+/* harmony import */ var _src_index__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../../../../src/index */ "../../src/index.js");
+
+
+
+
+/* harmony default export */ __webpack_exports__["default"] = (Object(_src_index__WEBPACK_IMPORTED_MODULE_2__["defineComponent"])({
+  props: ["onNextPage"],
+  setup(props, ctx) {
+    const handleGoToGame = () => {
+      props.onNextPage(_page__WEBPACK_IMPORTED_MODULE_1__["PAGE"].game);
+    };
+
+    return {
+      handleGoToGame,
+    };
+  },
+  render(ctx) {
+    return Object(_src_index__WEBPACK_IMPORTED_MODULE_2__["h"])("Container", [
+      Object(_src_index__WEBPACK_IMPORTED_MODULE_2__["h"])("Text", {
+        text: "开始页面",
+        x: _config__WEBPACK_IMPORTED_MODULE_0__["stage"].width / 2 - 50,
+        y: 200,
+        style: {
+          fill: ["#ffffff", "#00ff99"],
+        },
+      }),
+      Object(_src_index__WEBPACK_IMPORTED_MODULE_2__["h"])("Text", {
+        text: "开始游戏",
+        x: _config__WEBPACK_IMPORTED_MODULE_0__["stage"].width / 2 - 50,
+        y: _config__WEBPACK_IMPORTED_MODULE_0__["stage"].height - 300,
+        style: {
+          fill: "#ff0000",
+        },
+        on: {
+          pointertap: ctx.handleGoToGame,
+        },
+        interactive: true,
+        buttonMode: true,
+      }),
+    ]);
+  },
+}));
+
+
+/***/ }),
+
+/***/ "./src/component/page/index.js":
+/*!*************************************!*\
+  !*** ./src/component/page/index.js ***!
+  \*************************************/
+/*! exports provided: PAGE, getPageComponent */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "PAGE", function() { return PAGE; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getPageComponent", function() { return getPageComponent; });
+/* harmony import */ var _StartPage__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./StartPage */ "./src/component/page/StartPage.js");
+/* harmony import */ var _GamePage__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./GamePage */ "./src/component/page/GamePage.js");
+/* harmony import */ var _EndPage__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./EndPage */ "./src/component/page/EndPage.js");
+
+
+
+
+const PAGE = {
+  start: "startPage",
+  game: "gamePage",
+  end: "endPage",
+};
+
+const pageMap = {
+  [PAGE.start]: _StartPage__WEBPACK_IMPORTED_MODULE_0__["default"],
+  [PAGE.game]: _GamePage__WEBPACK_IMPORTED_MODULE_1__["default"],
+  [PAGE.end]: _EndPage__WEBPACK_IMPORTED_MODULE_2__["default"],
+};
+
+const getPageComponent = (pageName)=>{
+    return pageMap[pageName] 
+}
+
 
 
 /***/ }),
