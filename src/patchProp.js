@@ -10,28 +10,24 @@ export const patchProp = (
   parentSuspense,
   unmountChildren
 ) => {
-  switch (key) {
-    case "x":
-      el.x = nextValue;
-      break;
-    case "y":
-      el.y = nextValue;
-      break;
-    case "width":
-      el.width = nextValue;
-      break;
-    case "height":
-      el.height = nextValue;
-      break;
-    case "on":
-      Object.keys(nextValue).forEach((eventName) => {
-        const callback = nextValue[eventName];
-        el.on(eventName, callback);
-      });
-      break;
-    case "texture":
-      let texture = PIXI.Texture.from(nextValue);
-      el.texture = texture;
-      break;
+  if (key === "on" || key === "texture" || key === "style") {
+    switch (key) {
+      case "on":
+        Object.keys(nextValue).forEach((eventName) => {
+          const callback = nextValue[eventName];
+          el.on(eventName, callback);
+        });
+        break;
+      case "texture":
+        let texture = PIXI.Texture.from(nextValue);
+        el.texture = texture;
+        break;
+      case "style":
+        let style = new PIXI.TextStyle(nextValue);
+        el.style = style;
+        break;
+    }
+  } else {
+    el[key] = nextValue;
   }
 };

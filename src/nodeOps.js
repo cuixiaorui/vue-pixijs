@@ -34,6 +34,10 @@ export const nodeOps = {
       element = new PIXI.Container();
       element.x = 0;
       element.y = 0;
+    }else if(tag === "Text"){
+      element = new PIXI.Text()
+      element.x = 0;
+      element.y = 0;
     }
 
     return element;
