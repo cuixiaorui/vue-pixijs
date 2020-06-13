@@ -77,7 +77,7 @@
 /******/ 	__webpack_require__.o = function(object, property) { return Object.prototype.hasOwnProperty.call(object, property); };
 /******/
 /******/ 	// __webpack_public_path__
-/******/ 	__webpack_require__.p = "";
+/******/ 	__webpack_require__.p = "play-plane";
 /******/
 /******/
 /******/ 	// Load entry module and return exports
@@ -100711,7 +100711,7 @@ module.exports = function(module) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony default export */ __webpack_exports__["default"] = (__webpack_require__.p + "images/2776b050b41519576fb4dace15412dea.png");
+/* harmony default export */ __webpack_exports__["default"] = ("play-plane/images/2776b050b41519576fb4dace15412dea.png");
 
 /***/ }),
 
@@ -100724,7 +100724,7 @@ __webpack_require__.r(__webpack_exports__);
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony default export */ __webpack_exports__["default"] = (__webpack_require__.p + "images/f37fabd6d823651bd66bc6bab3f69de4.png");
+/* harmony default export */ __webpack_exports__["default"] = ("play-plane/images/f37fabd6d823651bd66bc6bab3f69de4.png");
 
 /***/ }),
 
@@ -100737,7 +100737,7 @@ __webpack_require__.r(__webpack_exports__);
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony default export */ __webpack_exports__["default"] = (__webpack_require__.p + "images/7d50f909f80dabf3159b39809f6cffb4.png");
+/* harmony default export */ __webpack_exports__["default"] = ("play-plane/images/7d50f909f80dabf3159b39809f6cffb4.png");
 
 /***/ }),
 
@@ -100750,7 +100750,7 @@ __webpack_require__.r(__webpack_exports__);
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony default export */ __webpack_exports__["default"] = (__webpack_require__.p + "images/0d6ff463279edc727e18f5b1c31abcc7.png");
+/* harmony default export */ __webpack_exports__["default"] = ("play-plane/images/0d6ff463279edc727e18f5b1c31abcc7.png");
 
 /***/ }),
 

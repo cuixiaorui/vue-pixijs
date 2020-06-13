@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "build": "webpack",
+    "build": "NODE_ENV=production webpack",
+    "dev":"NODE_ENV=development webpack --watch",
     "start": "serve .",
     "test": "jest"
   },
@@ -15,6 +16,7 @@
     "@babel/preset-env": "^7.10.2",
     "babel-jest": "^26.0.1",
     "file-loader": "^6.0.0",
+    "html-webpack-plugin": "^4.3.0",
     "jest": "^26.0.1",
     "serve": "^11.3.1",
     "webpack": "^4.43.0",

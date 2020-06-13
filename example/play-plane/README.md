@@ -13,7 +13,12 @@ yarn start
 ## 开发
 
 ```shell
-yarn build --watch
+yarn dev
+```
+
+## 构建
+```shel
+yarn build
 ```
 
 ## tasking
