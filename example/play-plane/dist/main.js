@@ -100870,7 +100870,7 @@ __webpack_require__.r(__webpack_exports__);
 
     const speed = 1;
 
-    _game__WEBPACK_IMPORTED_MODULE_0__["game"].ticker.add(() => {
+    const handleTicker = () => {
       y1.value += speed;
       y2.value += speed;
 
@@ -100881,7 +100881,16 @@ __webpack_require__.r(__webpack_exports__);
       if (y2.value > mapHeight) {
         y2.value = y1.value - mapHeight;
       }
+    };
+
+    Object(_src_index__WEBPACK_IMPORTED_MODULE_1__["onMounted"])(() => {
+      _game__WEBPACK_IMPORTED_MODULE_0__["game"].ticker.add(handleTicker);
     });
+
+    Object(_src_index__WEBPACK_IMPORTED_MODULE_1__["onUnmounted"])(() => {
+      _game__WEBPACK_IMPORTED_MODULE_0__["game"].ticker.remove(handleTicker);
+    });
+
     return {
       y1,
       x1,
@@ -100929,7 +100938,6 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony default export */ __webpack_exports__["default"] = (Object(_src_index__WEBPACK_IMPORTED_MODULE_2__["defineComponent"])({
   props: ["x", "y", "speed"],
   setup(props, ctx) {
-
     const x = Object(_src_index__WEBPACK_IMPORTED_MODULE_2__["ref"])(props.x);
     const y = Object(_src_index__WEBPACK_IMPORTED_MODULE_2__["ref"])(props.y);
     Object(_src_index__WEBPACK_IMPORTED_MODULE_2__["watch"])(props, (newProps) => {
@@ -100937,7 +100945,7 @@ __webpack_require__.r(__webpack_exports__);
       y.value = newProps.y;
     });
 
-    attackHandler(ctx, x, y);
+    useAttackHandler(ctx, x, y);
 
     return {
       x,
@@ -100953,13 +100961,14 @@ __webpack_require__.r(__webpack_exports__);
   },
 }));
 
-function attackHandler(ctx, x, y) {
+function useAttackHandler(ctx, x, y) {
   let isAttack = false;
   // 攻击间隔时间
   const ATTACK_INTERVAL = 10;
 
   let startTime = 0;
-  _game__WEBPACK_IMPORTED_MODULE_0__["game"].ticker.add(() => {
+
+  const handleTicker = () => {
     if (isAttack) {
       startTime++;
       if (startTime > ATTACK_INTERVAL) {
@@ -100967,6 +100976,14 @@ function attackHandler(ctx, x, y) {
         startTime = 0;
       }
     }
+  };
+
+  Object(_src_index__WEBPACK_IMPORTED_MODULE_2__["onMounted"])(() => {
+    _game__WEBPACK_IMPORTED_MODULE_0__["game"].ticker.add(handleTicker);
+  });
+
+  Object(_src_index__WEBPACK_IMPORTED_MODULE_2__["onUnmounted"])(() => {
+    _game__WEBPACK_IMPORTED_MODULE_0__["game"].ticker.remove(handleTicker);
   });
 
   const emitAttack = () => {
@@ -101094,6 +101111,7 @@ const createHashCode = () => {
   return hashCode++;
 };
 
+// 我方战机
 const useSelfPlane = ({ x, y, speed }) => {
   const selfPlane = Object(_src_index_js__WEBPACK_IMPORTED_MODULE_7__["reactive"])({
     x,
@@ -101139,6 +101157,7 @@ const useSelfPlane = ({ x, y, speed }) => {
   return selfPlane;
 };
 
+// 敌机
 const useEnemyPlanes = () => {
   //生产敌机
   const createEnemyPlaneData = (x) => {
@@ -101159,6 +101178,79 @@ const useEnemyPlanes = () => {
   }, 1000);
 
   return enemyPlanes;
+};
+
+// 战斗逻辑
+const useFighting = ({
+  selfPlane,
+  selfBullets,
+  enemyPlanes,
+  enemyPlaneBullets,
+  gameOverCallback,
+}) => {
+  const handleTicker = () => {
+    Object(_moveBullets__WEBPACK_IMPORTED_MODULE_8__["moveBullets"])(selfBullets);
+    Object(_moveBullets__WEBPACK_IMPORTED_MODULE_8__["moveBullets"])(enemyPlaneBullets);
+    Object(_moveEnemyPlane__WEBPACK_IMPORTED_MODULE_9__["moveEnemyPlane"])(enemyPlanes);
+
+    // 先遍历自己所有的子弹
+    selfBullets.forEach((bullet, selfIndex) => {
+      // 检测我方子弹是否碰到了敌机
+      enemyPlanes.forEach((enemyPlane, enemyPlaneIndex) => {
+        const isIntersect = Object(_utils__WEBPACK_IMPORTED_MODULE_6__["hitTestRectangle"])(bullet, enemyPlane);
+        if (isIntersect) {
+          selfBullets.splice(selfIndex, 1);
+
+          // 敌机需要减血
+          enemyPlane.life--;
+          if (enemyPlane.life <= 0) {
+            // todo
+            // 可以让实例发消息过来在销毁
+            // 因为需要在销毁之前播放销毁动画
+            enemyPlanes.splice(enemyPlaneIndex, 1);
+          }
+        }
+      });
+
+      // 检测是否碰到了敌方子弹
+      enemyPlaneBullets.forEach((enemyBullet, enemyBulletIndex) => {
+        const isIntersect = Object(_utils__WEBPACK_IMPORTED_MODULE_6__["hitTestRectangle"])(bullet, enemyBullet);
+        if (isIntersect) {
+          selfBullets.splice(selfIndex, 1);
+          enemyPlaneBullets.splice(enemyBulletIndex, 1);
+        }
+      });
+    });
+
+    const hitSelfHandle = (enemyObject) => {
+      const isIntersect = Object(_utils__WEBPACK_IMPORTED_MODULE_6__["hitTestRectangle"])(selfPlane, enemyObject);
+      if (isIntersect) {
+        // 碰到我方飞机
+        // 直接 game over
+        // 跳转到结束页面
+        gameOverCallback && gameOverCallback();
+      }
+    };
+
+    // 遍历敌军的子弹
+    enemyPlaneBullets.forEach((enemyBullet, enemyBulletIndex) => {
+      hitSelfHandle(enemyBullet);
+    });
+
+    // 遍历敌军
+    // 我方和敌军碰撞也会结束游戏
+    enemyPlanes.forEach((enemyPlane) => {
+      hitSelfHandle(enemyPlane);
+    });
+  };
+
+  Object(_src_index_js__WEBPACK_IMPORTED_MODULE_7__["onUnmounted"])(() => {
+    _game__WEBPACK_IMPORTED_MODULE_5__["game"].ticker.remove(handleTicker);
+  });
+
+  Object(_src_index_js__WEBPACK_IMPORTED_MODULE_7__["onMounted"])(() => {
+    _game__WEBPACK_IMPORTED_MODULE_5__["game"].ticker.add(handleTicker);
+  });
 };
 
 /* harmony default export */ __webpack_exports__["default"] = (Object(_src_index_js__WEBPACK_IMPORTED_MODULE_7__["defineComponent"])({
@@ -101196,70 +101288,16 @@ const useEnemyPlanes = () => {
       enemyPlaneBullets.push({ x, y, id, width, height, dir });
     };
 
-    const handleTicker = () => {
-      Object(_moveBullets__WEBPACK_IMPORTED_MODULE_8__["moveBullets"])(selfBullets);
-      Object(_moveBullets__WEBPACK_IMPORTED_MODULE_8__["moveBullets"])(enemyPlaneBullets);
-      Object(_moveEnemyPlane__WEBPACK_IMPORTED_MODULE_9__["moveEnemyPlane"])(enemyPlanes);
-
-      // 先遍历自己所有的子弹
-      selfBullets.forEach((bullet, selfIndex) => {
-        // 检测我方子弹是否碰到了敌机
-        enemyPlanes.forEach((enemyPlane, enemyPlaneIndex) => {
-          const isIntersect = Object(_utils__WEBPACK_IMPORTED_MODULE_6__["hitTestRectangle"])(bullet, enemyPlane);
-          if (isIntersect) {
-            selfBullets.splice(selfIndex, 1);
-
-            // 敌机需要减血
-            enemyPlane.life--;
-            if (enemyPlane.life <= 0) {
-              // todo
-              // 可以让实例发消息过来在销毁
-              // 因为需要在销毁之前播放销毁动画
-              enemyPlanes.splice(enemyPlaneIndex, 1);
-            }
-          }
-        });
-
-        // 检测是否碰到了敌方子弹
-        enemyPlaneBullets.forEach((enemyBullet, enemyBulletIndex) => {
-          const isIntersect = Object(_utils__WEBPACK_IMPORTED_MODULE_6__["hitTestRectangle"])(bullet, enemyBullet);
-          if (isIntersect) {
-            selfBullets.splice(selfIndex, 1);
-            enemyPlaneBullets.splice(enemyBulletIndex, 1);
-          }
-        });
-      });
-
-      // 遍历敌军的子弹
-      enemyPlaneBullets.forEach((enemyBullet, enemyBulletIndex) => {
-        const isIntersect = Object(_utils__WEBPACK_IMPORTED_MODULE_6__["hitTestRectangle"])(selfPlane, enemyBullet);
-        if (isIntersect) {
-          // 碰到我方飞机
-          // 直接 game over
-          // 跳转到结束页面
-          props.onNextPage(_index__WEBPACK_IMPORTED_MODULE_12__["PAGE"].end);
-        }
-      });
-
-      // 遍历敌军
-      // 我方和敌军碰撞也会结束游戏
-      enemyPlanes.forEach((enemyPlane) => {
-        const isIntersect = Object(_utils__WEBPACK_IMPORTED_MODULE_6__["hitTestRectangle"])(selfPlane, enemyPlane);
-        if (isIntersect) {
-          // 碰到我方飞机
-          // 直接 game over
-          // 跳转到结束页面
-          props.onNextPage(_index__WEBPACK_IMPORTED_MODULE_12__["PAGE"].end);
-        }
-      });
+    const handleGameOver = () => {
+      props.onNextPage(_index__WEBPACK_IMPORTED_MODULE_12__["PAGE"].end);
     };
 
-    Object(_src_index_js__WEBPACK_IMPORTED_MODULE_7__["onUnmounted"])(() => {
-      _game__WEBPACK_IMPORTED_MODULE_5__["game"].ticker.remove(handleTicker);
-    });
-
-    Object(_src_index_js__WEBPACK_IMPORTED_MODULE_7__["onMounted"])(() => {
-      _game__WEBPACK_IMPORTED_MODULE_5__["game"].ticker.add(handleTicker);
+    useFighting({
+      selfPlane,
+      selfBullets,
+      enemyPlanes,
+      enemyPlaneBullets,
+      gameOverCallback: handleGameOver,
     });
 
     return {
@@ -101297,14 +101335,18 @@ const useEnemyPlanes = () => {
       });
     };
 
-    return Object(_src_index_js__WEBPACK_IMPORTED_MODULE_7__["h"])("Container", [
-      Object(_src_index_js__WEBPACK_IMPORTED_MODULE_7__["h"])(_Map_js__WEBPACK_IMPORTED_MODULE_3__["default"]),
-      Object(_src_index_js__WEBPACK_IMPORTED_MODULE_7__["h"])(_Plane_js__WEBPACK_IMPORTED_MODULE_2__["default"], {
+    const createSelfPlane = () => {
+      return Object(_src_index_js__WEBPACK_IMPORTED_MODULE_7__["h"])(_Plane_js__WEBPACK_IMPORTED_MODULE_2__["default"], {
         x: ctx.selfPlane.x,
         y: ctx.selfPlane.y,
         speed: ctx.selfPlane.speed,
         onAttack: ctx.handlePlaneAttack,
-      }),
+      });
+    };
+
+    return Object(_src_index_js__WEBPACK_IMPORTED_MODULE_7__["h"])("Container", [
+      Object(_src_index_js__WEBPACK_IMPORTED_MODULE_7__["h"])(_Map_js__WEBPACK_IMPORTED_MODULE_3__["default"]),
+      createSelfPlane(),
       ...ctx.selfBullets.map(createBullet),
       ...ctx.enemyPlaneBullets.map(createBullet),
       ...ctx.enemyPlanes.map(createEnemyPlane),
