@@ -4,36 +4,77 @@ import Map from "../Map.js";
 import EnemyPlane from "../EnemyPlane";
 import { game } from "../../../game";
 import { hitTestRectangle } from "../../utils";
-import { h, reactive, ref } from "../../../../../src/index.js";
+import {
+  h,
+  reactive,
+  ref,
+  watch,
+  computed,
+  defineComponent,
+  onMounted,
+  onUnmounted,
+} from "../../../../../src/index.js";
 import { moveBullets } from "../../moveBullets";
 import { moveEnemyPlane } from "../../moveEnemyPlane";
 import { stage } from "../../config/index.js";
+import { useKeyboardMove } from "../../use";
+import { PAGE } from "./index";
 
 let hashCode = 0;
 const createHashCode = () => {
   return hashCode++;
 };
 
-export default {
-  setup() {
-    //生产敌机
-    const createEnemyPlaneData = (x) => {
-      return {
-        x,
-        y: -200,
-        width: 217,
-        height: 263,
-        life: 3,
-      };
-    };
-    const selfBullets = reactive([]);
-    const enemyPlanes = reactive([]);
-    const enemyPlaneBullets = reactive([]);
+const useSelfPlane = ({ x, y, speed }) => {
+  const selfPlane = reactive({
+    x,
+    y,
+    speed,
+    width: 119,
+    height: 181,
+  });
 
-    setInterval(() => {
-      const x = Math.floor((1 + stage.width) * Math.random());
-      enemyPlanes.push(createEnemyPlaneData(x));
-    }, 1000);
+  const { x: selfPlaneX, y: selfPlaneY } = useKeyboardMove({
+    x: selfPlane.x,
+    y: selfPlane.y,
+    speed: selfPlane.speed,
+  });
+
+  selfPlane.x = selfPlaneX;
+  selfPlane.y = selfPlaneY;
+
+  return selfPlane;
+};
+
+const useEnemyPlanes = () => {
+  //生产敌机
+  const createEnemyPlaneData = (x) => {
+    return {
+      x,
+      y: -200,
+      width: 217,
+      height: 263,
+      life: 3,
+    };
+  };
+
+  const enemyPlanes = reactive([]);
+
+  setInterval(() => {
+    const x = Math.floor((1 + stage.width) * Math.random());
+    enemyPlanes.push(createEnemyPlaneData(x));
+  }, 1000);
+
+  return enemyPlanes;
+};
+
+export default defineComponent({
+  props: ["onNextPage"],
+  setup(props) {
+    const selfPlane = useSelfPlane({ x: 200, y: 200, speed: 7 });
+    const selfBullets = reactive([]);
+    const enemyPlanes = useEnemyPlanes();
+    const enemyPlaneBullets = reactive([]);
 
     const handleBulletDestroy = ({ id }) => {
       const index = selfBullets.findIndex((info) => info.id == id);
@@ -58,12 +99,12 @@ export default {
       enemyPlaneBullets.push({ x, y, id, width, height, dir });
     };
 
-    game.ticker.add(() => {
+    const handleTicker = () => {
       moveBullets(selfBullets);
       moveBullets(enemyPlaneBullets);
       moveEnemyPlane(enemyPlanes);
 
-      // 先遍历所有的子弹
+      // 先遍历自己所有的子弹
       selfBullets.forEach((bullet, selfIndex) => {
         // 检测我方子弹是否碰到了敌机
         enemyPlanes.forEach((enemyPlane, enemyPlaneIndex) => {
@@ -91,9 +132,41 @@ export default {
           }
         });
       });
+
+      // 遍历敌军的子弹
+      enemyPlaneBullets.forEach((enemyBullet, enemyBulletIndex) => {
+        const isIntersect = hitTestRectangle(selfPlane, enemyBullet);
+        if (isIntersect) {
+          // 碰到我方飞机
+          // 直接 game over
+          // 跳转到结束页面
+          props.onNextPage(PAGE.end);
+        }
+      });
+
+      // 遍历敌军
+      // 我方和敌军碰撞也会结束游戏
+      enemyPlanes.forEach((enemyPlane) => {
+        const isIntersect = hitTestRectangle(selfPlane, enemyPlane);
+        if (isIntersect) {
+          // 碰到我方飞机
+          // 直接 game over
+          // 跳转到结束页面
+          props.onNextPage(PAGE.end);
+        }
+      });
+    };
+
+    onUnmounted(() => {
+      game.ticker.remove(handleTicker);
+    });
+
+    onMounted(() => {
+      game.ticker.add(handleTicker);
     });
 
     return {
+      selfPlane,
       enemyPlanes,
       selfBullets,
       enemyPlaneBullets,
@@ -130,6 +203,9 @@ export default {
     return h("Container", [
       h(Map),
       h(Plane, {
+        x: ctx.selfPlane.x,
+        y: ctx.selfPlane.y,
+        speed: ctx.selfPlane.speed,
         onAttack: ctx.handlePlaneAttack,
       }),
       ...ctx.selfBullets.map(createBullet),
@@ -137,4 +213,4 @@ export default {
       ...ctx.enemyPlanes.map(createEnemyPlane),
     ]);
   },
-};
+});

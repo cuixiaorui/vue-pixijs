@@ -1,13 +1,16 @@
 import { game } from "../../game";
 import { useKeyboardMove, useKeyboard } from "../use";
-import { h, defineComponent } from "../../../../src/index";
+import { h, defineComponent, watch,ref } from "../../../../src/index";
 // 飞机
 export default defineComponent({
+  props: ["x", "y", "speed"],
   setup(props, ctx) {
-    const { x, y } = useKeyboardMove({
-      x: 200,
-      y: 400,
-      speed: 7,
+
+    const x = ref(props.x);
+    const y = ref(props.y);
+    watch(props, (newProps) => {
+      x.value = newProps.x;
+      y.value = newProps.y;
     });
 
     attackHandler(ctx, x, y);
