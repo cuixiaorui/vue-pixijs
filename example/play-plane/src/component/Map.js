@@ -18,7 +18,7 @@ export default defineComponent({
 
     const speed = 1;
 
-    game.ticker.add(() => {
+    const handleTicker = () => {
       y1.value += speed;
       y2.value += speed;
 
@@ -29,7 +29,16 @@ export default defineComponent({
       if (y2.value > mapHeight) {
         y2.value = y1.value - mapHeight;
       }
+    };
+
+    onMounted(() => {
+      game.ticker.add(handleTicker);
     });
+
+    onUnmounted(() => {
+      game.ticker.remove(handleTicker);
+    });
+
     return {
       y1,
       x1,
