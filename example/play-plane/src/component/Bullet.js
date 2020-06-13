@@ -1,4 +1,5 @@
 import { h, ref, defineComponent, watch } from "../../../../src/index";
+import bunnyImagePath from '../../resource/assets/bunny.png'
 
 //炮弹
 export default defineComponent({
@@ -21,7 +22,7 @@ export default defineComponent({
     return h("Sprite", {
       x: ctx.x,
       y: ctx.y,
-      texture: "../../resource/assets/bunny.png",
+      texture: bunnyImagePath,
     });
   },
 });

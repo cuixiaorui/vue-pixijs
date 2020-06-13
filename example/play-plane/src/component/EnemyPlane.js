@@ -1,5 +1,6 @@
 import { game } from "../../game";
 import { useKeyboardMove, useKeyboard } from "../use";
+import enemyImagePath from '../../resource/assets/enemy.png'
 import {
   h,
   defineComponent,
@@ -45,7 +46,7 @@ export default defineComponent({
     return h("Sprite", {
       x: ctx.x,
       y: ctx.y,
-      texture: "../../resource/assets/enemy.png",
+      texture: enemyImagePath,
     });
   },
 });

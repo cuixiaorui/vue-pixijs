@@ -52641,6 +52641,7 @@ const patchProp = (
         });
         break;
       case "texture":
+        console.log(nextValue)
         let texture = PIXI_js__WEBPACK_IMPORTED_MODULE_0__["Texture"].from(nextValue);
         el.texture = texture;
         break;
@@ -100702,6 +100703,58 @@ module.exports = function(module) {
 
 /***/ }),
 
+/***/ "./resource/assets/bunny.png":
+/*!***********************************!*\
+  !*** ./resource/assets/bunny.png ***!
+  \***********************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony default export */ __webpack_exports__["default"] = (__webpack_require__.p + "images/2776b050b41519576fb4dace15412dea.png");
+
+/***/ }),
+
+/***/ "./resource/assets/enemy.png":
+/*!***********************************!*\
+  !*** ./resource/assets/enemy.png ***!
+  \***********************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony default export */ __webpack_exports__["default"] = (__webpack_require__.p + "images/f37fabd6d823651bd66bc6bab3f69de4.png");
+
+/***/ }),
+
+/***/ "./resource/assets/map.png":
+/*!*********************************!*\
+  !*** ./resource/assets/map.png ***!
+  \*********************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony default export */ __webpack_exports__["default"] = (__webpack_require__.p + "images/7d50f909f80dabf3159b39809f6cffb4.png");
+
+/***/ }),
+
+/***/ "./resource/assets/plane.png":
+/*!***********************************!*\
+  !*** ./resource/assets/plane.png ***!
+  \***********************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony default export */ __webpack_exports__["default"] = (__webpack_require__.p + "images/0d6ff463279edc727e18f5b1c31abcc7.png");
+
+/***/ }),
+
 /***/ "./src/component/Bullet.js":
 /*!*********************************!*\
   !*** ./src/component/Bullet.js ***!
@@ -100712,6 +100765,8 @@ module.exports = function(module) {
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _src_index__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../../../src/index */ "../../src/index.js");
+/* harmony import */ var _resource_assets_bunny_png__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../resource/assets/bunny.png */ "./resource/assets/bunny.png");
+
 
 
 //炮弹
@@ -100735,7 +100790,7 @@ __webpack_require__.r(__webpack_exports__);
     return Object(_src_index__WEBPACK_IMPORTED_MODULE_0__["h"])("Sprite", {
       x: ctx.x,
       y: ctx.y,
-      texture: "../../resource/assets/bunny.png",
+      texture: _resource_assets_bunny_png__WEBPACK_IMPORTED_MODULE_1__["default"],
     });
   },
 }));
@@ -100754,18 +100809,20 @@ __webpack_require__.r(__webpack_exports__);
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _game__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../game */ "./game.js");
 /* harmony import */ var _use__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../use */ "./src/use/index.js");
-/* harmony import */ var _src_index__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../../../src/index */ "../../src/index.js");
+/* harmony import */ var _resource_assets_enemy_png__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../resource/assets/enemy.png */ "./resource/assets/enemy.png");
+/* harmony import */ var _src_index__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../../../../src/index */ "../../src/index.js");
+
 
 
 
 // 敌方飞机
-/* harmony default export */ __webpack_exports__["default"] = (Object(_src_index__WEBPACK_IMPORTED_MODULE_2__["defineComponent"])({
+/* harmony default export */ __webpack_exports__["default"] = (Object(_src_index__WEBPACK_IMPORTED_MODULE_3__["defineComponent"])({
   props: ["x", "y"],
   setup(props, ctx) {
-    const x = Object(_src_index__WEBPACK_IMPORTED_MODULE_2__["ref"])(props.x);
-    const y = Object(_src_index__WEBPACK_IMPORTED_MODULE_2__["ref"])(props.y);
+    const x = Object(_src_index__WEBPACK_IMPORTED_MODULE_3__["ref"])(props.x);
+    const y = Object(_src_index__WEBPACK_IMPORTED_MODULE_3__["ref"])(props.y);
 
-    Object(_src_index__WEBPACK_IMPORTED_MODULE_2__["watch"])(props, (newValue) => {
+    Object(_src_index__WEBPACK_IMPORTED_MODULE_3__["watch"])(props, (newValue) => {
       x.value = newValue.x;
       y.value = newValue.y;
     });
@@ -100773,7 +100830,7 @@ __webpack_require__.r(__webpack_exports__);
     // 发射子弹
     const attackInterval = 2000;
     let intervalId;
-    Object(_src_index__WEBPACK_IMPORTED_MODULE_2__["onMounted"])(() => {
+    Object(_src_index__WEBPACK_IMPORTED_MODULE_3__["onMounted"])(() => {
       intervalId = setInterval(() => {
         ctx.emit("attack", {
           x: x.value + 105,
@@ -100782,7 +100839,7 @@ __webpack_require__.r(__webpack_exports__);
       }, attackInterval);
     });
 
-    Object(_src_index__WEBPACK_IMPORTED_MODULE_2__["onUnmounted"])(() => {
+    Object(_src_index__WEBPACK_IMPORTED_MODULE_3__["onUnmounted"])(() => {
       clearInterval(intervalId);
     });
 
@@ -100792,10 +100849,10 @@ __webpack_require__.r(__webpack_exports__);
     };
   },
   render(ctx) {
-    return Object(_src_index__WEBPACK_IMPORTED_MODULE_2__["h"])("Sprite", {
+    return Object(_src_index__WEBPACK_IMPORTED_MODULE_3__["h"])("Sprite", {
       x: ctx.x,
       y: ctx.y,
-      texture: "../../resource/assets/enemy.png",
+      texture: _resource_assets_enemy_png__WEBPACK_IMPORTED_MODULE_2__["default"],
     });
   },
 }));
@@ -100856,6 +100913,8 @@ __webpack_require__.r(__webpack_exports__);
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _game__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../game */ "./game.js");
 /* harmony import */ var _src_index__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../../../src/index */ "../../src/index.js");
+/* harmony import */ var _resource_assets_map_png__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../resource/assets/map.png */ "./resource/assets/map.png");
+
 
 
 
@@ -100903,13 +100962,13 @@ __webpack_require__.r(__webpack_exports__);
       Object(_src_index__WEBPACK_IMPORTED_MODULE_1__["h"])("Sprite", {
         x: ctx.x1,
         y: ctx.y1,
-        texture: "../../resource/assets/map.png",
+        texture: _resource_assets_map_png__WEBPACK_IMPORTED_MODULE_2__["default"],
         key: "1",
       }),
       Object(_src_index__WEBPACK_IMPORTED_MODULE_1__["h"])("Sprite", {
         x: ctx.x2,
         y: ctx.y2,
-        texture: "../../resource/assets/map.png",
+        texture: _resource_assets_map_png__WEBPACK_IMPORTED_MODULE_2__["default"],
         key: "2",
       }),
     ]);
@@ -100931,6 +100990,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _game__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../game */ "./game.js");
 /* harmony import */ var _use__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../use */ "./src/use/index.js");
 /* harmony import */ var _src_index__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../../../src/index */ "../../src/index.js");
+/* harmony import */ var _resource_assets_plane_png__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../../resource/assets/plane.png */ "./resource/assets/plane.png");
+
 
 
 
@@ -100956,7 +101017,7 @@ __webpack_require__.r(__webpack_exports__);
     return Object(_src_index__WEBPACK_IMPORTED_MODULE_2__["h"])("Sprite", {
       x: ctx.x,
       y: ctx.y,
-      texture: "../../resource/assets/plane.png",
+      texture: _resource_assets_plane_png__WEBPACK_IMPORTED_MODULE_3__["default"],
     });
   },
 }));

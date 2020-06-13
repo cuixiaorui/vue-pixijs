@@ -7,6 +7,7 @@ import {
   onUnmounted,
 } from "../../../../src/index";
 
+import mapImagePath from "../../resource/assets/map.png"
 // 地图
 export default defineComponent({
   setup(props, ctx) {
@@ -51,13 +52,13 @@ export default defineComponent({
       h("Sprite", {
         x: ctx.x1,
         y: ctx.y1,
-        texture: "../../resource/assets/map.png",
+        texture: mapImagePath,
         key: "1",
       }),
       h("Sprite", {
         x: ctx.x2,
         y: ctx.y2,
-        texture: "../../resource/assets/map.png",
+        texture: mapImagePath,
         key: "2",
       }),
     ]);

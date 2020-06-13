@@ -8,6 +8,7 @@ import {
   onMounted,
   onUnmounted,
 } from "../../../../src/index";
+import planeImagePath from '../../resource/assets/plane.png'
 // 飞机
 export default defineComponent({
   props: ["x", "y", "speed"],
@@ -30,7 +31,7 @@ export default defineComponent({
     return h("Sprite", {
       x: ctx.x,
       y: ctx.y,
-      texture: "../../resource/assets/plane.png",
+      texture: planeImagePath,
     });
   },
 });
