@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "build": "NODE_ENV=production webpack",
-    "dev":"NODE_ENV=development webpack --watch",
+    "build": "NODE_ENV=production webpack --mode=production",
+    "dev":"NODE_ENV=development webpack --watch --mode=development",
     "start": "serve .",
     "test": "jest"
   },

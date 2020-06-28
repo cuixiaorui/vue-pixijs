@@ -1,6 +1,6 @@
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const path = require("path");
-const base = process.env.NODE_ENV === "production" ? "play-plane" : "./";
+const base = process.env.NODE_ENV === "production" ? "./" : "./";
 
 module.exports = {
   devtool: "source-map",
