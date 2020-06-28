@@ -1,5 +1,5 @@
 import { stage } from "./config";
-const bulletSpeed = 3;
+const bulletSpeed = 7;
 const topLine = -100;
 const bottomLine = stage.height + 50;
 

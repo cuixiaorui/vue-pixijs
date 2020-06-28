@@ -87,7 +87,7 @@ const useEnemyPlanes = () => {
   setInterval(() => {
     const x = Math.floor((1 + stage.width) * Math.random());
     enemyPlanes.push(createEnemyPlaneData(x));
-  }, 1000);
+  }, 600);
 
   return enemyPlanes;
 };

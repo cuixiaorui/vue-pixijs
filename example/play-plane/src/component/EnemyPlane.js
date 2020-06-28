@@ -22,7 +22,7 @@ export default defineComponent({
     });
 
     // 发射子弹
-    const attackInterval = 2000;
+    const attackInterval = 1000;
     let intervalId;
     onMounted(() => {
       intervalId = setInterval(() => {
