@@ -1,6 +1,8 @@
-import { stage } from "../../config";
 import { PAGE } from "../page";
 import { h, defineComponent } from "../../../../../src/index";
+
+import endPageAsset from "../../../resource/assets/end_page.jpg";
+import restartBtn from "../../../resource/assets/restartBtn.png";
 
 export default defineComponent({
   props: ["onNextPage"],
@@ -15,21 +17,15 @@ export default defineComponent({
   },
   render(ctx) {
     return h("Container", [
-      h("Text", {
-        text: "结束页面",
-        x: stage.width / 2 - 50,
-        y: 200,
-        style: {
-          fill: ["#ffffff", "#00ff99"],
-        },
+      h("Sprite", {
+        texture: endPageAsset,
+        key: "1",
       }),
-      h("Text", {
-        text: "再来一局",
-        x: stage.width / 2 - 50,
-        y: stage.height - 300,
-        style: {
-          fill: "#ff0000",
-        },
+      h("Sprite", {
+        x: 230,
+        y: 515,
+        texture: restartBtn,
+        key: "2",
         on: {
           pointertap: ctx.handleGoToGame,
         },

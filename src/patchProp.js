@@ -26,6 +26,10 @@ export const patchProp = (
         let style = new PIXI.TextStyle(nextValue);
         el.style = style;
         break;
+      case "anchor":
+        console.log(nextValue)
+        el.anchor.set(...nextValue);
+        break;
     }
   } else {
     el[key] = nextValue;

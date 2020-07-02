@@ -7,11 +7,13 @@ import {
   onUnmounted,
 } from "../../../../src/index";
 
-import mapImagePath from "../../resource/assets/map.png"
+import {stage} from '../config'
+import mapImagePath from "../../resource/assets/map.jpg"
+
 // 地图
 export default defineComponent({
   setup(props, ctx) {
-    const mapHeight = 800;
+    const mapHeight = stage.height;
     let x1 = ref(0);
     let x2 = ref(0);
     let y1 = ref(0);

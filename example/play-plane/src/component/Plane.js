@@ -9,6 +9,12 @@ import {
   onUnmounted,
 } from "../../../../src/index";
 import planeImagePath from '../../resource/assets/plane.png'
+
+export const PlaneInfo = {
+  width:258,
+  height:364
+}
+
 // 飞机
 export default defineComponent({
   props: ["x", "y", "speed"],
@@ -63,8 +69,8 @@ function useAttackHandler(ctx, x, y) {
 
   const emitAttack = () => {
     ctx.emit("attack", {
-      x: x.value + 50,
-      y: y.value,
+      x: x.value + 110,
+      y: y.value + 0,
     });
   };
 

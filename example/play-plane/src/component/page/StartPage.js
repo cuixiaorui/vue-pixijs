@@ -1,6 +1,8 @@
-import { stage } from "../../config";
 import { PAGE } from "../page";
 import { h, defineComponent } from "../../../../../src/index";
+
+import startPageAsset from "../../../resource/assets/start_page.jpg";
+import startBtn from "../../../resource/assets/startBtn.png";
 
 export default defineComponent({
   props: ["onNextPage"],
@@ -15,21 +17,15 @@ export default defineComponent({
   },
   render(ctx) {
     return h("Container", [
-      h("Text", {
-        text: "开始页面",
-        x: stage.width / 2 - 50,
-        y: 200,
-        style: {
-          fill: ["#ffffff", "#00ff99"],
-        },
+      h("Sprite", {
+        texture: startPageAsset,
+        key: "1",
       }),
-      h("Text", {
-        text: "开始游戏",
-        x: stage.width / 2 - 50,
-        y: stage.height - 300,
-        style: {
-          fill: "#ff0000",
-        },
+      h("Sprite", {
+        x: 230,
+        y: 515,
+        texture: startBtn,
+        key: "2",
         on: {
           pointertap: ctx.handleGoToGame,
         },

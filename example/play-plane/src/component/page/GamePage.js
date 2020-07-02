@@ -1,8 +1,8 @@
 import TWEEN from "@tweenjs/tween.js";
-import Bullet from "../Bullet.js";
-import Plane from "../Plane.js";
+import Bullet, { SelfBulletInfo, EnemyBulletInfo } from "../Bullet.js";
+import Plane, { PlaneInfo } from "../Plane.js";
 import Map from "../Map.js";
-import EnemyPlane from "../EnemyPlane";
+import EnemyPlane, { EnemyPlaneInfo } from "../EnemyPlane";
 import { game } from "../../../game";
 import { hitTestRectangle } from "../../utils";
 import {
@@ -29,8 +29,8 @@ const useSelfPlane = ({ x, y, speed }) => {
     x,
     y,
     speed,
-    width: 119,
-    height: 181,
+    width: PlaneInfo.width,
+    height: PlaneInfo.height,
   });
 
   const { x: selfPlaneX, y: selfPlaneY } = useKeyboardMove({
@@ -44,7 +44,7 @@ const useSelfPlane = ({ x, y, speed }) => {
     x,
     y,
   })
-    .to({ y: y - 200 }, 500)
+    .to({ y: y - 250 }, 500)
     .start();
   tween.onUpdate((obj) => {
     selfPlane.x = obj.x;
@@ -76,9 +76,9 @@ const useEnemyPlanes = () => {
     return {
       x,
       y: -200,
-      width: 217,
-      height: 263,
-      life: 3,
+      width: EnemyPlaneInfo.width,
+      height: EnemyPlaneInfo.height,
+      life: EnemyPlaneInfo.life,
     };
   };
 
@@ -186,18 +186,20 @@ export default defineComponent({
 
     const handlePlaneAttack = ({ x, y }) => {
       const id = createHashCode();
-      const width = 26;
-      const height = 37;
+      const width = SelfBulletInfo.width;
+      const height = SelfBulletInfo.height;
+      const rotation = SelfBulletInfo.rotation;
       const dir = -1;
-      selfBullets.push({ x, y, id, width, height, dir });
+      selfBullets.push({ x, y, id, width, height, rotation,dir });
     };
 
     const handleEnemyPlaneAttack = ({ x, y }) => {
       const id = createHashCode();
-      const width = 26;
-      const height = 37;
+      const width = EnemyBulletInfo.width;
+      const height = EnemyBulletInfo.height;
+      const rotation = EnemyBulletInfo.rotation;
       const dir = 1;
-      enemyPlaneBullets.push({ x, y, id, width, height, dir });
+      enemyPlaneBullets.push({ x, y, id, width, height, rotation,dir });
     };
 
     const handleGameOver = () => {
@@ -232,6 +234,7 @@ export default defineComponent({
         id: info.id,
         width: info.width,
         height: info.height,
+        rotation: info.rotation,
         onDestroy: ctx.handleBulletDestroy,
       });
     };

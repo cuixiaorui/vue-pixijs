@@ -1,4 +1,6 @@
 export const stage = {
   width: 750,
-  height: 800,
+  height: 1080,
 };
+
+
