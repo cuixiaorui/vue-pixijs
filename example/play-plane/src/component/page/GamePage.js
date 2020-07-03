@@ -189,8 +189,8 @@ export default defineComponent({
       const width = SelfBulletInfo.width;
       const height = SelfBulletInfo.height;
       const rotation = SelfBulletInfo.rotation;
-      const dir = -1;
-      selfBullets.push({ x, y, id, width, height, rotation,dir });
+      const dir = SelfBulletInfo.dir;
+      selfBullets.push({ x, y, id, width, height, rotation, dir });
     };
 
     const handleEnemyPlaneAttack = ({ x, y }) => {
@@ -198,8 +198,8 @@ export default defineComponent({
       const width = EnemyBulletInfo.width;
       const height = EnemyBulletInfo.height;
       const rotation = EnemyBulletInfo.rotation;
-      const dir = 1;
-      enemyPlaneBullets.push({ x, y, id, width, height, rotation,dir });
+      const dir = EnemyBulletInfo.dir;
+      enemyPlaneBullets.push({ x, y, id, width, height, rotation, dir });
     };
 
     const handleGameOver = () => {
@@ -235,6 +235,7 @@ export default defineComponent({
         width: info.width,
         height: info.height,
         rotation: info.rotation,
+        dir: info.dir,
         onDestroy: ctx.handleBulletDestroy,
       });
     };
