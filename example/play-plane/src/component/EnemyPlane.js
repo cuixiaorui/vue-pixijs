@@ -27,22 +27,7 @@ export default defineComponent({
       y.value = newValue.y;
     });
 
-    // 发射子弹
-    const attackInterval = 2000;
-    let intervalId;
-    onMounted(() => {
-      intervalId = setInterval(() => {
-        ctx.emit("attack", {
-          x: x.value + 105,
-          y: y.value + 200,
-        });
-      }, attackInterval);
-    });
-
-    onUnmounted(() => {
-      clearInterval(intervalId);
-    });
-
+    useAttack(ctx, x, y);
     return {
       x,
       y,
@@ -56,3 +41,21 @@ export default defineComponent({
     });
   },
 });
+
+const useAttack = (ctx, x, y) => {
+  // 发射子弹
+  const attackInterval = 2000;
+  let intervalId;
+  onMounted(() => {
+    intervalId = setInterval(() => {
+      ctx.emit("attack", {
+        x: x.value + 105,
+        y: y.value + 200,
+      });
+    }, attackInterval);
+  });
+
+  onUnmounted(() => {
+    clearInterval(intervalId);
+  });
+};
