@@ -23,11 +23,11 @@ export default defineComponent({
       y1.value += speed;
       y2.value += speed;
 
-      if (y1.value > mapHeight) {
+      if (y1.value >= mapHeight) {
         y1.value = -mapHeight;
       }
 
-      if (y2.value > mapHeight) {
+      if (y2.value >= mapHeight) {
         y2.value = -mapHeight;
       }
     };
