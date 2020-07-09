@@ -69,6 +69,37 @@ const useSelfPlane = ({ x, y, speed }) => {
   return selfPlane;
 };
 
+// 我方子弹
+const useSelfBullet = () => {
+  // 子弹的数据
+  const selfBullets = reactive([]);
+
+  // 创建子弹
+  const createSelfBullet = (x, y) => {
+    const id = createHashCode();
+    const width = SelfBulletInfo.width;
+    const height = SelfBulletInfo.height;
+    const rotation = SelfBulletInfo.rotation;
+    const dir = SelfBulletInfo.dir;
+    selfBullets.push({ x, y, id, width, height, rotation, dir });
+  };
+
+  // 销毁子弹
+
+  const destroySelfBullet = (id) => {
+    const index = selfBullets.findIndex((info) => info.id == id);
+    if (index !== -1) {
+      selfBullets.splice(index, 1);
+    }
+  };
+
+  return {
+    selfBullets,
+    createSelfBullet,
+    destroySelfBullet,
+  };
+};
+
 // 敌机
 const useEnemyPlanes = () => {
   //生产敌机
@@ -90,6 +121,25 @@ const useEnemyPlanes = () => {
   }, 600);
 
   return enemyPlanes;
+};
+
+const useEnemyPlaneBullets = () => {
+  // 创建敌军子弹
+  const enemyPlaneBullets = reactive([]);
+
+  const createEnemyPlaneBullet = (x, y) => {
+    const id = createHashCode();
+    const width = EnemyBulletInfo.width;
+    const height = EnemyBulletInfo.height;
+    const rotation = EnemyBulletInfo.rotation;
+    const dir = EnemyBulletInfo.dir;
+    enemyPlaneBullets.push({ x, y, id, width, height, rotation, dir });
+  };
+
+  return {
+    enemyPlaneBullets,
+    createEnemyPlaneBullet,
+  };
 };
 
 // 战斗逻辑
@@ -173,55 +223,38 @@ export default defineComponent({
       y: stage.height,
       speed: 7,
     });
-    const selfBullets = reactive([]);
+
+    const {
+      selfBullets,
+      createSelfBullet,
+      destroySelfBullet,
+    } = useSelfBullet();
+
     const enemyPlanes = useEnemyPlanes();
-    const enemyPlaneBullets = reactive([]);
 
-    const handleBulletDestroy = ({ id }) => {
-      const index = selfBullets.findIndex((info) => info.id == id);
-      if (index !== -1) {
-        selfBullets.splice(index, 1);
-      }
-    };
-
-    const handlePlaneAttack = ({ x, y }) => {
-      const id = createHashCode();
-      const width = SelfBulletInfo.width;
-      const height = SelfBulletInfo.height;
-      const rotation = SelfBulletInfo.rotation;
-      const dir = SelfBulletInfo.dir;
-      selfBullets.push({ x, y, id, width, height, rotation, dir });
-    };
-
-    const handleEnemyPlaneAttack = ({ x, y }) => {
-      const id = createHashCode();
-      const width = EnemyBulletInfo.width;
-      const height = EnemyBulletInfo.height;
-      const rotation = EnemyBulletInfo.rotation;
-      const dir = EnemyBulletInfo.dir;
-      enemyPlaneBullets.push({ x, y, id, width, height, rotation, dir });
-    };
-
-    const handleGameOver = () => {
-      props.onNextPage(PAGE.end);
-    };
+    const {
+      enemyPlaneBullets,
+      createEnemyPlaneBullet,
+    } = useEnemyPlaneBullets();
 
     useFighting({
       selfPlane,
       selfBullets,
       enemyPlanes,
       enemyPlaneBullets,
-      gameOverCallback: handleGameOver,
+      gameOverCallback() {
+        props.onNextPage(PAGE.end);
+      },
     });
 
     return {
       selfPlane,
       enemyPlanes,
       selfBullets,
+      createSelfBullet,
+      destroySelfBullet,
       enemyPlaneBullets,
-      handleBulletDestroy,
-      handlePlaneAttack,
-      handleEnemyPlaneAttack,
+      createEnemyPlaneBullet,
     };
   },
 
@@ -236,7 +269,9 @@ export default defineComponent({
         height: info.height,
         rotation: info.rotation,
         dir: info.dir,
-        onDestroy: ctx.handleBulletDestroy,
+        onDestroy({ id }) {
+          ctx.destroySelfBullet(id);
+        },
       });
     };
 
@@ -247,7 +282,9 @@ export default defineComponent({
         y: info.y,
         height: info.height,
         width: info.width,
-        onAttack: ctx.handleEnemyPlaneAttack,
+        onAttack({ x, y }) {
+          ctx.createEnemyPlaneBullet(x, y);
+        },
       });
     };
 
@@ -256,7 +293,9 @@ export default defineComponent({
         x: ctx.selfPlane.x,
         y: ctx.selfPlane.y,
         speed: ctx.selfPlane.speed,
-        onAttack: ctx.handlePlaneAttack,
+        onAttack({ x, y }) {
+          ctx.createSelfBullet(x, y);
+        },
       });
     };
 
